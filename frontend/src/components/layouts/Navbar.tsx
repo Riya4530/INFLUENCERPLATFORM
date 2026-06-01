@@ -83,12 +83,13 @@ export default function Navbar() {
 
             ) : (
 
-              <a
-                href="/login"
-                className="bg-black text-white px-6 py-3 rounded-2xl hover:scale-105 hover:opacity-90 transition duration-300 font-semibold"
-              >
-                Login
-              </a>
+             <div className="flex gap-3">
+  <a
+    href="/signup"
+    className="bg-black text-white px-6 py-3 rounded-2xl hover:scale-105 hover:opacity-90 transition duration-300 font-semibold"
+  >
+    Get Started
+  </a>
 
             )
           }
