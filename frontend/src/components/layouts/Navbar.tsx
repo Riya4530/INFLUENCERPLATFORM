@@ -106,7 +106,7 @@ export default function Navbar() {
                 Logout
               </button>
             </>
-          ) : (
+          ) :  (
 
             <a
               href="/signup"
@@ -116,7 +116,6 @@ export default function Navbar() {
             </a>
 
           )}
-
         </div>
 
       </div>
