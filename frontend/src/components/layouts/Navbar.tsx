@@ -11,8 +11,30 @@ export default function Navbar() {
     const storedUser =
       localStorage.getItem("user");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (
+      storedUser &&
+      storedUser !== "undefined"
+    ) {
+
+      try {
+
+        setUser(
+          JSON.parse(storedUser)
+        );
+
+      } catch (error) {
+
+        console.log(
+          "Invalid user data",
+          error
+        );
+
+        localStorage.removeItem(
+          "user"
+        );
+
+      }
+
     }
 
   }, []);
@@ -40,7 +62,6 @@ export default function Navbar() {
             className="relative group text-lg"
           >
             Home
-
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
           </a>
 
@@ -49,7 +70,6 @@ export default function Navbar() {
             className="relative group text-lg"
           >
             Influencers
-
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
           </a>
 
@@ -58,7 +78,6 @@ export default function Navbar() {
             className="relative group text-lg"
           >
             About
-
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
           </a>
 
@@ -67,12 +86,18 @@ export default function Navbar() {
             className="relative group text-lg"
           >
             Contact
-
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
           </a>
 
-          {
-            user ? (
+          {user ? (
+            <>
+              <a
+                href="/dashboard"
+                className="relative group text-lg"
+              >
+                Dashboard
+                <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
+              </a>
 
               <button
                 onClick={handleLogout}
@@ -80,18 +105,17 @@ export default function Navbar() {
               >
                 Logout
               </button>
+            </>
+          ) : (
 
-            ) : (
+            <a
+              href="/signup"
+              className="bg-black text-white px-6 py-3 rounded-2xl hover:scale-105 hover:opacity-90 transition duration-300 font-semibold"
+            >
+              Get Started
+            </a>
 
-              <a
-                href="/login"
-                className="bg-black text-white px-6 py-3 rounded-2xl hover:scale-105 hover:opacity-90 transition duration-300 font-semibold"
-              >
-                Login
-              </a>
-
-            )
-          }
+          )}
 
         </div>
 

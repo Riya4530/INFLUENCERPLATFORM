@@ -4,17 +4,10 @@ import { useState } from "react";
 
 export default function SignupPage() {
 
-  const [name, setName] =
-    useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [role, setRole] =
-    useState("influencer");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("influencer");
 
   const handleSignup = async (
     e: React.FormEvent
@@ -22,34 +15,50 @@ export default function SignupPage() {
 
     e.preventDefault();
 
-    const response = await fetch(
-      "http://localhost:5000/api/signup",
-      {
-        method: "POST",
+    try {
 
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
+      const response = await fetch(
+        "http://localhost:5000/api/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role,
+          }),
+        }
+      );
 
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-        }),
-      }
-    );
+      const data = await response.json();
 
-    const data =
-      await response.json();
+      alert(data.message);
 
-    alert(data.message);
+     if (data.success) {
 
-    if (data.success) {
+ if (data.success) {
 
-      window.location.href =
-        "/login";
+  localStorage.setItem(
+    "user",
+    JSON.stringify(data.user)
+  );
+
+  window.location.href =
+    "/dashboard";
+
+}
+
+}
+    } catch (error) {
+
+      console.log(error);
+
+      alert(
+        "Could not connect to server"
+      );
 
     }
 
@@ -91,6 +100,7 @@ export default function SignupPage() {
                 setName(e.target.value)
               }
               className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+              required
             />
 
           </div>
@@ -109,6 +119,7 @@ export default function SignupPage() {
                 setEmail(e.target.value)
               }
               className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+              required
             />
 
           </div>
@@ -127,11 +138,10 @@ export default function SignupPage() {
                 setPassword(e.target.value)
               }
               className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+              required
             />
 
           </div>
-
-          {/* ROLE SELECT */}
 
           <div>
 
@@ -163,7 +173,7 @@ export default function SignupPage() {
             type="submit"
             className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
           >
-            Create Account
+            Sign Up
           </button>
 
         </form>

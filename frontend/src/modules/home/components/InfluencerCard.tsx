@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 
 type InfluencerCardProps = {
+  id: number | string;
   name?: string;
   category?: string;
   followers?: number | string;
@@ -10,6 +14,7 @@ type InfluencerCardProps = {
 };
 
 export default function InfluencerCard({
+  id,
   name,
   category,
   followers,
@@ -18,68 +23,63 @@ export default function InfluencerCard({
   image,
 }: InfluencerCardProps) {
   return (
-    <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition duration-300">
+    <Link href={`/influencers/${id}`}>
+      <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition duration-300 cursor-pointer">
 
-      {/* IMAGE */}
-      <div className="relative h-72 w-full">
-        {image ? (
-          <Image
-            src={image.trim()}
-            alt={name || "Influencer"}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            No Image
-          </div>
-        )}
-      </div>
-
-      {/* CONTENT */}
-      <div className="p-6 space-y-2">
-
-        {/* NAME */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold">
-            {name || "No Name"}
-          </h3>
-
-          <span className="text-sm bg-black text-white px-3 py-1 rounded-full">
-            Verified
-          </span>
+        <div className="relative h-72 w-full">
+          {image ? (
+            <Image
+              src={image.trim()}
+              alt={name || "Influencer"}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+              No Image
+            </div>
+          )}
         </div>
 
-        {/* CATEGORY */}
-        <p className="text-gray-600 font-medium">
-          {category || "No Category"}
-        </p>
+        <div className="p-6 space-y-2">
 
-        {/* FOLLOWERS */}
-        <p className="text-gray-500">
-          Followers: {followers || "0"}
-        </p>
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold">
+              {name || "No Name"}
+            </h3>
 
-        {/* CITY */}
-        {city && (
-          <p className="text-gray-500">
-            {city}
+            <span className="text-sm bg-black text-white px-3 py-1 rounded-full">
+              Verified
+            </span>
+          </div>
+
+          <p className="text-gray-600 font-medium">
+            {category || "No Category"}
           </p>
-        )}
 
-        {/* INSTAGRAM */}
-        {instagram && (
           <p className="text-gray-500">
-            Instagram: {instagram}
+            Followers: {followers || "0"}
           </p>
-        )}
 
-        {/* BUTTON */}
-        <button className="w-full mt-4 bg-black text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
-          View Profile
-        </button>
+          {city && (
+            <p className="text-gray-500">
+              {city}
+            </p>
+          )}
+
+          {instagram && (
+            <p className="text-gray-500">
+              Instagram: {instagram}
+            </p>
+          )}
+
+          <button className="w-full mt-4 bg-black text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
+            View Profile
+          </button>
+
+        </div>
 
       </div>
-    </div>
+    </Link>
   );
 }

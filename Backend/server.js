@@ -1,7 +1,8 @@
+const bcrypt = require("bcrypt");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { Pool } = require("pg");
+const { Pool, Client } = require("pg");
 
 const app = express();
 
@@ -11,6 +12,36 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+
+// Simple in-memory SSE clients map
+const sseClients = new Map(); // clientId -> send function
+let nextClientId = 1;
+
+function addSseClient(sendFn) {
+  const id = nextClientId++;
+  sseClients.set(id, sendFn);
+  return id;
+}
+
+function removeSseClient(id) {
+  sseClients.delete(id);
+}
+
+async function broadcastInfluencers() {
+  try {
+    const profiles = await pool.query(`SELECT * FROM influencer_profiles ORDER BY id DESC`);
+    const payload = JSON.stringify({ type: 'update', influencers: profiles.rows });
+    for (const send of sseClients.values()) {
+      try {
+        send(payload);
+      } catch (e) {
+        // ignore individual client errors
+      }
+    }
+  } catch (e) {
+    console.log('Error broadcasting influencers', e);
+  }
+}
 
 pool.connect((err) => {
 
@@ -76,6 +107,9 @@ app.post("/api/signup", async (req, res) => {
       role,
     } = req.body;
 
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
+
     const newUser = await pool.query(
       `
       INSERT INTO users
@@ -86,12 +120,12 @@ app.post("/api/signup", async (req, res) => {
         role
       )
       VALUES ($1, $2, $3, $4)
-      RETURNING *
+      RETURNING id, name, email, role
       `,
       [
         name,
         email,
-        password,
+        hashedPassword,
         role,
       ]
     );
@@ -116,7 +150,6 @@ app.post("/api/signup", async (req, res) => {
 });
 
 
-
 /* =========================
    LOGIN API
 ========================= */
@@ -127,17 +160,33 @@ app.post("/api/login", async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await pool.query(
+    const result = await pool.query(
       `
       SELECT *
       FROM users
       WHERE email = $1
-      AND password = $2
       `,
-      [email, password]
+      [email]
     );
 
-    if (user.rows.length === 0) {
+    if (result.rows.length === 0) {
+
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+
+    }
+
+    const user = result.rows[0];
+
+    const passwordMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
+    if (!passwordMatch) {
 
       return res.status(401).json({
         success: false,
@@ -149,7 +198,12 @@ app.post("/api/login", async (req, res) => {
     res.json({
       success: true,
       message: "Login successful",
-      user: user.rows[0],
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
 
   } catch (error) {
@@ -222,6 +276,16 @@ app.post(
           "Profile created successfully",
       });
 
+      // broadcast updated list to SSE clients
+      broadcastInfluencers();
+
+      // notify Postgres listeners
+      try {
+        await pool.query("NOTIFY influencers_channel, 'profile_created'");
+      } catch (e) {
+        console.log('Error sending NOTIFY after create:', e);
+      }
+
     } catch (error) {
 
       console.log(error);
@@ -275,6 +339,40 @@ app.get(
 
   }
 );
+
+
+/* =========================
+   INFLUENCERS SSE STREAM
+========================= */
+
+app.get('/api/influencers/stream', async (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  const send = (data) => {
+    // data is stringified JSON
+    res.write(`data: ${data}\n\n`);
+  };
+
+  // add client
+  const clientId = addSseClient(send);
+
+  // send initial payload
+  try {
+    const profiles = await pool.query(`SELECT * FROM influencer_profiles ORDER BY id DESC`);
+    send(JSON.stringify({ type: 'initial', influencers: profiles.rows }));
+  } catch (e) {
+    send(JSON.stringify({ type: 'error', message: 'Could not fetch influencers' }));
+  }
+
+  req.on('close', () => {
+    removeSseClient(clientId);
+  });
+});
 
 
 
@@ -436,6 +534,16 @@ app.put(
           "Profile updated successfully",
       });
 
+      // broadcast updated list to SSE clients
+      broadcastInfluencers();
+
+      // notify Postgres listeners
+      try {
+        await pool.query("NOTIFY influencers_channel, 'profile_updated'");
+      } catch (e) {
+        console.log('Error sending NOTIFY after update:', e);
+      }
+
     } catch (error) {
 
       console.log(error);
@@ -562,3 +670,22 @@ app.listen(PORT, () => {
   );
 
 });
+
+// Setup a dedicated listener client for Postgres LISTEN/NOTIFY
+const listenerClient = new Client({ connectionString: process.env.DATABASE_URL });
+listenerClient.connect()
+  .then(() => {
+    listenerClient.query('LISTEN influencers_channel');
+    listenerClient.on('notification', async (msg) => {
+      // When notification received, broadcast updated influencers to SSE clients
+      try {
+        broadcastInfluencers();
+      } catch (e) {
+        console.log('Error handling notification', e);
+      }
+    });
+    console.log('LISTEN setup on influencers_channel');
+  })
+  .catch((err) => {
+    console.log('Error setting up listener client', err);
+  });

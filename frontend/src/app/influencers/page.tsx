@@ -3,25 +3,23 @@
 import { useEffect, useState } from "react";
 import InfluencerCard from "@/modules/home/components/InfluencerCard";
 
+
 export default function InfluencersPage() {
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [influencers, setInfluencers] = useState<any[]>([]);
 
+ 
+
   useEffect(() => {
-
-    fetch("http://localhost:5000/api/influencers")
-      .then((res) => res.json())
-      .then((data) => {
-
-        if (data.success) {
-          setInfluencers(data.influencers);
-        }
-
-      });
-
-  }, []);
+  fetch("http://localhost:5000/api/influencers")
+    .then((res) => res.json())
+    .then((data) => {
+      const list = data.influencers || data;
+      setInfluencers(list || []);
+    });
+}, []);
 
   const filteredInfluencers = influencers.filter(
     (influencer: any) => {
@@ -37,6 +35,7 @@ export default function InfluencersPage() {
       return matchesSearch && matchesCategory;
     }
   );
+  
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-20">
@@ -99,29 +98,24 @@ export default function InfluencersPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
-        {filteredInfluencers.map(
-          (influencer: any) => (
+  {filteredInfluencers.map(
+    (influencer: any) => (
 
-            <a
-             key={influencer.id}
-             href={`/influencers/${influencer.id}`}
-            >
+      <InfluencerCard
+        key={influencer.id}
+        id={influencer.id}
+        name={influencer.name}
+        category={influencer.category}
+        followers={influencer.followers}
+        city={influencer.city}
+        instagram={influencer.instagram}
+        image={influencer.image}
+      />
 
-              <InfluencerCard
-                name={influencer.name}
-                category={influencer.category}
-                followers={influencer.followers}
-                city={influencer.instagram}
-                image={influencer.image}
-              />
+    )
+  )}
 
-            </a>
-
-          )
-        )}
-
-      </div>
-
+</div>
     </main>
   );
 }        

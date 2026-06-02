@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CreateProfilePage() {
+
+  const [email, setEmail] = useState("");
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -12,43 +14,132 @@ export default function CreateProfilePage() {
   const [instagram, setInstagram] = useState("");
   const [image, setImage] = useState("");
 
+  const [profileExists, setProfileExists] =
+    useState(false);
+
+  useEffect(() => {
+
+    const storedUser =
+      localStorage.getItem("user");
+
+    if (!storedUser) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const user =
+      JSON.parse(storedUser);
+
+    setEmail(user.email);
+
+    fetch(
+      `http://localhost:5000/api/profile/${user.email}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+
+        if (
+          data.success &&
+          data.profile
+        ) {
+
+          setProfileExists(true);
+
+          setName(
+            data.profile.name || ""
+          );
+
+          setCategory(
+            data.profile.category || ""
+          );
+
+          setCity(
+            data.profile.city || ""
+          );
+
+          setFollowers(
+            data.profile.followers || ""
+          );
+
+          setBio(
+            data.profile.bio || ""
+          );
+
+          setInstagram(
+            data.profile.instagram || ""
+          );
+
+          setImage(
+            data.profile.image || ""
+          );
+
+        }
+
+      })
+      .catch((err) =>
+        console.log(err)
+      );
+
+  }, []);
+
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
 
     e.preventDefault();
 
-    const user = JSON.parse(
-      localStorage.getItem("user") || "{}"
-    );
+    try {
 
-    const response = await fetch(
-      "http://localhost:5000/api/create-profile",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_email: user.email,
-          name,
-          category,
-          city,
-          followers,
-          bio,
-          instagram,
-          image,
-        }),
+      const url = profileExists
+        ? `http://localhost:5000/api/update-profile/${email}`
+        : "http://localhost:5000/api/create-profile";
+
+      const method =
+        profileExists
+          ? "PUT"
+          : "POST";
+
+      const response =
+        await fetch(url, {
+          method,
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            user_email: email,
+            name,
+            category,
+            city,
+            followers,
+            bio,
+            instagram,
+            image,
+          }),
+        });
+
+      const data =
+        await response.json();
+
+      alert(data.message);
+
+      if (data.success) {
+
+        window.location.href =
+          "/dashboard";
+
       }
-    );
 
-    const data = await response.json();
+    } catch (error) {
 
-    alert(data.message);
+      console.log(error);
 
-    if (data.success) {
-      window.location.href = "/dashboard";
+      alert(
+        "Something went wrong"
+      );
+
     }
+
   };
 
   return (
@@ -58,12 +149,33 @@ export default function CreateProfilePage() {
 
         <div className="text-center mb-10">
 
+          <div className="flex justify-center mb-6">
+
+            <img
+              src={
+                image ||
+                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+              }
+              alt="Profile Preview"
+              className="w-32 h-32 rounded-full object-cover border-4 border-pink-500"
+            />
+
+          </div>
+
           <h1 className="text-5xl font-extrabold mb-4">
-            Create Influencer Profile
+
+            {profileExists
+              ? "Edit Profile"
+              : "Create Influencer Profile"}
+
           </h1>
 
           <p className="text-gray-500 text-lg">
-            Build your creator profile and connect with brands.
+
+            {profileExists
+              ? "Update your creator profile"
+              : "Build your creator profile and connect with brands"}
+
           </p>
 
         </div>
@@ -74,25 +186,22 @@ export default function CreateProfilePage() {
         >
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Influencer Name
             </label>
 
             <input
               type="text"
-              placeholder="Enter influencer name"
               value={name}
               onChange={(e) =>
                 setName(e.target.value)
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
+              required
             />
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Category
             </label>
@@ -102,9 +211,9 @@ export default function CreateProfilePage() {
               onChange={(e) =>
                 setCategory(e.target.value)
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
+              required
             >
-
               <option value="">
                 Select Category
               </option>
@@ -126,103 +235,96 @@ export default function CreateProfilePage() {
               </option>
 
             </select>
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               City
             </label>
 
             <input
               type="text"
-              placeholder="Enter your city"
               value={city}
               onChange={(e) =>
                 setCity(e.target.value)
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
             />
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Followers
             </label>
 
             <input
               type="text"
-              placeholder="Example: 250K"
               value={followers}
               onChange={(e) =>
-                setFollowers(e.target.value)
+                setFollowers(
+                  e.target.value
+                )
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
             />
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Instagram Username
             </label>
 
             <input
               type="text"
-              placeholder="@username"
               value={instagram}
               onChange={(e) =>
-                setInstagram(e.target.value)
+                setInstagram(
+                  e.target.value
+                )
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
             />
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Profile Image URL
             </label>
 
             <input
               type="text"
-              placeholder="Paste image URL"
               value={image}
               onChange={(e) =>
-                setImage(e.target.value)
+                setImage(
+                  e.target.value
+                )
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-pink-500"
+              placeholder="Paste image URL"
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
             />
-
           </div>
 
           <div>
-
             <label className="block mb-3 font-semibold">
               Bio
             </label>
 
             <textarea
-              placeholder="Tell brands about yourself..."
               value={bio}
               onChange={(e) =>
                 setBio(e.target.value)
               }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 h-36 outline-none focus:border-pink-500"
-            ></textarea>
-
+              className="w-full border border-gray-300 rounded-2xl px-5 py-4 h-36"
+            />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-4 rounded-2xl font-semibold text-lg hover:scale-[1.02] transition duration-300"
+            className="w-full bg-black text-white py-4 rounded-2xl font-semibold text-lg hover:scale-[1.02] transition"
           >
-            Create Profile
+            {profileExists
+              ? "Update Profile"
+              : "Create Profile"}
           </button>
 
         </form>

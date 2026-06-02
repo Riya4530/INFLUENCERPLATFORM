@@ -3,34 +3,67 @@
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-
   const [user, setUser] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState("");
+  const [profileId, setProfileId] = useState<number | null>(null);
+  const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
-
     const storedUser = localStorage.getItem("user");
 
-    if (!storedUser) {
+    if (
+      !storedUser ||
+      storedUser === "undefined" ||
+      storedUser === "null"
+    ) {
+      localStorage.removeItem("user");
       window.location.href = "/login";
-    } else {
-      setUser(JSON.parse(storedUser));
+      return;
     }
 
+    try {
+      const parsedUser = JSON.parse(storedUser);
+
+      setUser(parsedUser);
+
+      fetch(
+        `http://localhost:5000/api/profile/${parsedUser.email}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.profile) {
+            setHasProfile(true);
+
+            setProfileId(data.profile.id);
+
+            if (data.profile.image) {
+              setProfileImage(data.profile.image);
+            }
+          }
+        })
+        .catch((err) =>
+          console.log("Profile fetch error:", err)
+        );
+    } catch (error) {
+      console.log("Invalid user:", error);
+
+      localStorage.removeItem("user");
+
+      window.location.href = "/login";
+    }
   }, []);
 
   const handleLogout = () => {
-
     localStorage.removeItem("user");
-
     window.location.href = "/login";
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-6">
+    <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 py-12 px-6">
 
       <div className="max-w-6xl mx-auto">
 
-        {/* TOP SECTION */}
+        {/* HEADER */}
 
         <div className="bg-white rounded-3xl shadow-xl p-10 mb-10">
 
@@ -39,8 +72,11 @@ export default function DashboardPage() {
             <div className="flex items-center gap-6">
 
               <img
-                src="https://i.pravatar.cc/150?img=12"
-                alt="profile"
+                src={
+                  profileImage ||
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                }
+                alt="Profile"
                 className="w-28 h-28 rounded-full object-cover border-4 border-pink-500"
               />
 
@@ -50,12 +86,14 @@ export default function DashboardPage() {
                   Welcome Back 👋
                 </h1>
 
-                <p className="text-gray-500 text-lg">
-                  Manage your influencer account
+                <p className="text-gray-500 text-lg mb-3">
+                  {user?.role === "brand"
+                    ? "Manage your brand account"
+                    : "Manage your influencer account"}
                 </p>
 
                 {user && (
-                  <div className="mt-4 space-y-1">
+                  <div className="space-y-1">
 
                     <p className="text-lg">
                       <span className="font-semibold">
@@ -69,6 +107,13 @@ export default function DashboardPage() {
                         Email:
                       </span>{" "}
                       {user.email}
+                    </p>
+
+                    <p className="text-lg">
+                      <span className="font-semibold">
+                        Role:
+                      </span>{" "}
+                      {user.role}
                     </p>
 
                   </div>
@@ -94,6 +139,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
 
           <div className="bg-black text-white rounded-3xl p-8 shadow-lg">
+
             <h2 className="text-5xl font-bold mb-3">
               12K
             </h2>
@@ -101,9 +147,11 @@ export default function DashboardPage() {
             <p className="text-gray-300 text-lg">
               Profile Views
             </p>
+
           </div>
 
           <div className="bg-pink-600 text-white rounded-3xl p-8 shadow-lg">
+
             <h2 className="text-5xl font-bold mb-3">
               45
             </h2>
@@ -111,9 +159,11 @@ export default function DashboardPage() {
             <p className="text-pink-100 text-lg">
               Brand Requests
             </p>
+
           </div>
 
           <div className="bg-blue-600 text-white rounded-3xl p-8 shadow-lg">
+
             <h2 className="text-5xl font-bold mb-3">
               8
             </h2>
@@ -121,26 +171,50 @@ export default function DashboardPage() {
             <p className="text-blue-100 text-lg">
               Active Campaigns
             </p>
+
           </div>
 
         </div>
 
         {/* ACTION CARDS */}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-          <a
-            href="/create-profile"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          >
-            <h2 className="text-3xl font-bold mb-4">
-              Create Profile
-            </h2>
+          {!hasProfile && (
 
-            <p className="text-gray-500">
-              Create your influencer profile
-            </p>
-          </a>
+            <a
+              href="/create-profile"
+              className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
+            >
+              <h2 className="text-3xl font-bold mb-4">
+                Create Profile
+              </h2>
+
+              <p className="text-gray-500">
+                Create your influencer profile
+              </p>
+
+            </a>
+
+          )}
+
+          {hasProfile && (
+
+            <a
+              href={`/influencers/${profileId}`}
+              className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
+            >
+              <h2 className="text-3xl font-bold mb-4">
+                View My Profile
+              </h2>
+
+              <p className="text-gray-500">
+                View your public influencer profile
+              </p>
+
+            </a>
+
+          )}
 
           <a
             href="/dashboard/profile"
@@ -151,8 +225,9 @@ export default function DashboardPage() {
             </h2>
 
             <p className="text-gray-500">
-              Update influencer details
+              Update your influencer details
             </p>
+
           </a>
 
           <a
@@ -166,51 +241,8 @@ export default function DashboardPage() {
             <p className="text-gray-500">
               Explore all influencers
             </p>
+
           </a>
-
-        </div>
-
-        {/* RECENT ACTIVITY */}
-
-        <div className="bg-white rounded-3xl shadow-xl p-10">
-
-          <h2 className="text-3xl font-bold mb-8">
-            Recent Activity
-          </h2>
-
-          <div className="space-y-6">
-
-            <div className="border rounded-2xl p-5">
-              <p className="font-semibold">
-                Brand collaboration request received
-              </p>
-
-              <p className="text-gray-500">
-                Nike sent you a campaign invitation
-              </p>
-            </div>
-
-            <div className="border rounded-2xl p-5">
-              <p className="font-semibold">
-                Profile updated successfully
-              </p>
-
-              <p className="text-gray-500">
-                Your profile changes were saved
-              </p>
-            </div>
-
-            <div className="border rounded-2xl p-5">
-              <p className="font-semibold">
-                New followers gained
-              </p>
-
-              <p className="text-gray-500">
-                You gained 120 followers this week
-              </p>
-            </div>
-
-          </div>
 
         </div>
 
@@ -218,4 +250,4 @@ export default function DashboardPage() {
 
     </main>
   );
-} 
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
 
@@ -9,6 +10,8 @@ export default function LoginPage() {
 
   const [password, setPassword] =
     useState("");
+
+  const router = useRouter();
 
   const handleLogin = async (
     e: React.FormEvent
@@ -33,36 +36,27 @@ export default function LoginPage() {
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
-      alert(data.message);
+      if (!data.success) {
+        alert(data.message || "Login failed");
+        return;
+      }
 
-      if (data.success) {
+      if (!data.user) {
+        alert("Login succeeded but no user returned from server");
+        return;
+      }
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
+      localStorage.setItem("user", JSON.stringify(data.user));
 
-        /* =========================
-           ROLE BASED REDIRECT
-        ========================= */
+      alert(data.message || "Login successful");
 
-        if (
-          data.user.role === "admin"
-        ) {
-
-          window.location.href =
-            "/admin";
-
-        } else {
-
-          window.location.href =
-            "/dashboard";
-
-        }
-
+      /* ROLE BASED REDIRECT */
+      if (data.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
       }
 
     } catch (error) {
@@ -143,7 +137,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
+            className="w-full block bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
           >
             Login
           </button>

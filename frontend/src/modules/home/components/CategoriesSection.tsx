@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const categories = [
   "Food",
   "Fashion",
@@ -23,10 +25,12 @@ export default function CategoriesSection() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+
           {categories.map((category) => (
-            <div
+            <Link
               key={category}
-              className="group border border-gray-200 rounded-3xl p-10 text-center hover:bg-black hover:text-white hover:-translate-y-2 transition duration-300 shadow-sm hover:shadow-2xl"
+              href={`/influencers?category=${category.toLowerCase()}`}
+              className="group border border-gray-200 rounded-3xl p-10 text-center hover:bg-black hover:text-white hover:-translate-y-2 transition duration-300 shadow-sm hover:shadow-2xl block"
             >
               <h3 className="text-3xl font-bold mb-3">
                 {category}
@@ -35,8 +39,9 @@ export default function CategoriesSection() {
               <p className="text-sm opacity-70">
                 Explore top {category.toLowerCase()} creators.
               </p>
-            </div>
+            </Link>
           ))}
+
         </div>
 
       </div>
