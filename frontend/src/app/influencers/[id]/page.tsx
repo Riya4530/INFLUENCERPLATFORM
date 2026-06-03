@@ -65,13 +65,22 @@ export default function InfluencerProfilePage() {
     <main className="min-h-screen bg-gray-100 py-10 px-6">
       <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden shadow-xl">
 
-        <div className="relative w-full h-[500px]">
-          <Image
-            src={influencer.image}
-            alt={influencer.name}
-            fill
-            className="object-cover"
-          />
+       <div className="relative w-full h-[500px]">
+
+  {influencer.image ? (
+    <Image
+      src={influencer.image}
+      alt={influencer.name}
+      fill
+      className="object-cover"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-xl font-semibold">
+      No Image Available
+    </div>
+  )}
+
+
         </div>
 
         <div className="p-10">

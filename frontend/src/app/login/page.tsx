@@ -53,8 +53,11 @@ export default function LoginPage() {
       alert(data.message || "Login successful");
 
       /* ROLE BASED REDIRECT */
+     
       if (data.user.role === "admin") {
         router.push("/admin");
+      } else if (data.user.role === "brand") {
+        router.push("/brand-dashboard");
       } else {
         router.push("/dashboard");
       }
@@ -132,6 +135,12 @@ export default function LoginPage() {
               className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
               required
             />
+            <a
+  href="/forgot-password"
+  className="text-blue-600 text-sm hover:underline"
+>
+  Forgot Password?
+</a>
 
           </div>
 
