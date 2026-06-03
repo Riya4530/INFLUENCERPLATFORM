@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
 
@@ -10,8 +11,12 @@ export default function LoginPage() {
   const [password, setPassword] =
     useState("");
 
+<<<<<<< HEAD
   const [loading, setLoading] =
     useState(false);
+=======
+  const router = useRouter();
+>>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
 
   const handleLogin = async (
     e: React.FormEvent
@@ -40,18 +45,21 @@ export default function LoginPage() {
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
-      alert(data.message);
+      if (!data.success) {
+        alert(data.message || "Login failed");
+        return;
+      }
 
-      if (data.success) {
+      if (!data.user) {
+        alert("Login succeeded but no user returned from server");
+        return;
+      }
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
+      localStorage.setItem("user", JSON.stringify(data.user));
 
+<<<<<<< HEAD
         /* =========================
            ROLE BASED REDIRECT
         ========================= */
@@ -92,6 +100,15 @@ export default function LoginPage() {
 
         }
 
+=======
+      alert(data.message || "Login successful");
+
+      /* ROLE BASED REDIRECT */
+      if (data.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+>>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
       }
 
     } catch (error) {
@@ -177,8 +194,12 @@ export default function LoginPage() {
 
           <button
             type="submit"
+<<<<<<< HEAD
             disabled={loading}
             className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition disabled:opacity-50"
+=======
+            className="w-full block bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
+>>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
           >
 
             {loading

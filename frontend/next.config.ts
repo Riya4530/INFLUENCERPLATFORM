@@ -1,15 +1,18 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
 
+const nextConfig: NextConfig = {
   images: {
-
-    domains: [
-      "i.pravatar.cc",
-      "images.unsplash.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
     ],
-
   },
-
 };
 
-module.exports = nextConfig;
+export default nextConfig;

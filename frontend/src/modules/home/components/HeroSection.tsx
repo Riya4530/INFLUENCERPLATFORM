@@ -31,7 +31,7 @@ export default function HeroSection() {
           </Link>
 
           {/* Become Creator Button */}
-          <Link href="/create-influencer">
+          <Link href="/create-profile">
             <button className="border border-black px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-black hover:text-white transition">
               Become a Creator
             </button>
