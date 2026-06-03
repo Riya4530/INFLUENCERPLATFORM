@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 type InfluencerCardProps = {
-  id: number | string;
+  id:  string;
   name?: string;
   category?: string;
   followers?: number | string;
