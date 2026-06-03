@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
 
@@ -11,12 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] =
     useState("");
 
-<<<<<<< HEAD
   const [loading, setLoading] =
     useState(false);
-=======
-  const router = useRouter();
->>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
 
   const handleLogin = async (
     e: React.FormEvent
@@ -48,67 +43,64 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!data.success) {
+
         alert(data.message || "Login failed");
+
         return;
+
       }
 
       if (!data.user) {
-        alert("Login succeeded but no user returned from server");
+
+        alert(
+          "Login succeeded but no user returned from server"
+        );
+
         return;
+
       }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-<<<<<<< HEAD
-        /* =========================
-           ROLE BASED REDIRECT
-        ========================= */
-
-        if (
-          data.user.role === "admin"
-        ) {
-
-          window.location.href =
-            "/admin";
-
-        }
-
-        else if (
-          data.user.role ===
-          "influencer"
-        ) {
-
-          window.location.href =
-            "/dashboard";
-
-        }
-
-        else if (
-          data.user.role ===
-          "brand"
-        ) {
-
-          window.location.href =
-            "/brand";
-
-        }
-
-        else {
-
-          window.location.href =
-            "/";
-
-        }
-
-=======
-      alert(data.message || "Login successful");
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
 
       /* ROLE BASED REDIRECT */
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
->>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
+
+      if (
+        data.user.role === "admin"
+      ) {
+
+        window.location.href =
+          "/admin";
+
+      }
+
+      else if (
+        data.user.role ===
+        "influencer"
+      ) {
+
+        window.location.href =
+          "/dashboard";
+
+      }
+
+      else if (
+        data.user.role ===
+        "brand"
+      ) {
+
+        window.location.href =
+          "/brand";
+
+      }
+
+      else {
+
+        window.location.href =
+          "/";
+
       }
 
     } catch (error) {
@@ -194,12 +186,8 @@ export default function LoginPage() {
 
           <button
             type="submit"
-<<<<<<< HEAD
             disabled={loading}
             className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition disabled:opacity-50"
-=======
-            className="w-full block bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
->>>>>>> eefaf8955476f3d177cabdd5cd7e7d34e861f708
           >
 
             {loading
