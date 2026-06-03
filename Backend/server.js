@@ -548,6 +548,378 @@ app.get(
   }
 );
 
+/* =========================
+   CREATE BRAND PROFILE
+========================= */
+
+app.post(
+  "/api/create-brand-profile",
+  async (req, res) => {
+
+    try {
+
+      const {
+        user_email,
+        company_name,
+        industry,
+        website,
+        location,
+        logo,
+        description
+      } = req.body;
+
+      await pool.query(
+        `
+        INSERT INTO brand_profiles
+        (
+          user_email,
+          company_name,
+          industry,
+          website,
+          location,
+          logo,
+          description
+        )
+        VALUES
+        ($1,$2,$3,$4,$5,$6,$7)
+        `,
+        [
+          user_email,
+          company_name,
+          industry,
+          website,
+          location,
+          logo,
+          description
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Brand profile created successfully"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Error creating profile"
+      });
+
+    }
+
+  }
+);
+
+/* =========================
+   GET BRAND PROFILE
+========================= */
+
+app.get(
+  "/api/brand-profile/:email",
+  async (req, res) => {
+
+    try {
+
+      const { email } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT *
+          FROM brand_profiles
+          WHERE user_email = $1
+          `,
+          [email]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+
+        return res.json({
+          success: false,
+          profile: null
+        });
+
+      }
+
+      res.json({
+        success: true,
+        profile:
+          result.rows[0]
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+/* =========================
+   UPDATE BRAND PROFILE
+========================= */
+
+app.put(
+  "/api/update-brand-profile/:email",
+  async (req, res) => {
+
+    try {
+
+      const { email } =
+        req.params;
+
+      const {
+        company_name,
+        industry,
+        website,
+        location,
+        logo,
+        description
+      } = req.body;
+
+      await pool.query(
+        `
+        UPDATE brand_profiles
+        SET
+          company_name = $1,
+          industry = $2,
+          website = $3,
+          location = $4,
+          logo = $5,
+          description = $6
+        WHERE user_email = $7
+        `,
+        [
+          company_name,
+          industry,
+          website,
+          location,
+          logo,
+          description,
+          email
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Brand profile updated successfully"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Error updating profile"
+      });
+
+    }
+
+  }
+);
+
+/* =========================
+   SEND COLLABORATION REQUEST
+========================= */
+
+app.post(
+  "/api/send-request",
+  async (req, res) => {
+
+    try {
+
+      const {
+        brand_email,
+        influencer_id,
+        message
+      } = req.body;
+
+      await pool.query(
+        `
+        INSERT INTO collaboration_requests
+        (
+          brand_email,
+          influencer_id,
+          message
+        )
+        VALUES
+        ($1,$2,$3)
+        `,
+        [
+          brand_email,
+          influencer_id,
+          message
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Request sent successfully"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+/* =========================
+   GET REQUESTS FOR INFLUENCER
+========================= */
+
+app.get(
+  "/api/requests/:influencerId",
+  async (req, res) => {
+
+    try {
+
+      const { influencerId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT *
+          FROM collaboration_requests
+          WHERE influencer_id = $1
+          ORDER BY created_at DESC
+          `,
+          [influencerId]
+        );
+
+      res.json({
+        success: true,
+        requests:
+          result.rows
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+
+/* =========================
+   GET COLLABORATION REQUESTS
+========================= */
+
+app.get(
+  "/api/requests/:influencerId",
+  async (req, res) => {
+
+    try {
+
+      const { influencerId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT *
+          FROM collaboration_requests
+          WHERE influencer_id = $1
+          ORDER BY id DESC
+          `,
+          [influencerId]
+        );
+
+      res.json({
+        success: true,
+        requests: result.rows
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+app.get(
+  "/api/influencer-requests/:email",
+  async (req, res) => {
+
+    try {
+
+      const { email } = req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            collaboration_requests.*,
+            brand_profiles.company_name,
+            brand_profiles.logo
+          FROM collaboration_requests
+          LEFT JOIN brand_profiles
+          ON collaboration_requests.brand_email =
+             brand_profiles.user_email
+          WHERE influencer_id IN (
+            SELECT id
+            FROM influencers
+            WHERE user_email = $1
+          )
+          ORDER BY created_at DESC
+          `,
+          [email]
+        );
+
+      res.json({
+        success: true,
+        requests: result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+
 
 /* =========================
    SERVER START

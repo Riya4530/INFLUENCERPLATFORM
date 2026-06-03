@@ -10,11 +10,16 @@ export default function LoginPage() {
   const [password, setPassword] =
     useState("");
 
+  const [loading, setLoading] =
+    useState(false);
+
   const handleLogin = async (
     e: React.FormEvent
   ) => {
 
     e.preventDefault();
+
+    setLoading(true);
 
     try {
 
@@ -22,10 +27,12 @@ export default function LoginPage() {
         "http://localhost:5000/api/login",
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             email,
             password,
@@ -56,10 +63,32 @@ export default function LoginPage() {
           window.location.href =
             "/admin";
 
-        } else {
+        }
+
+        else if (
+          data.user.role ===
+          "influencer"
+        ) {
 
           window.location.href =
             "/dashboard";
+
+        }
+
+        else if (
+          data.user.role ===
+          "brand"
+        ) {
+
+          window.location.href =
+            "/brand";
+
+        }
+
+        else {
+
+          window.location.href =
+            "/";
 
         }
 
@@ -73,14 +102,19 @@ export default function LoginPage() {
         "Something went wrong"
       );
 
+    } finally {
+
+      setLoading(false);
+
     }
 
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
 
-      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-gray-200">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-6 py-10">
+
+      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-2xl border border-gray-200">
 
         <div className="text-center mb-10">
 
@@ -143,20 +177,25 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
+            disabled={loading}
+            className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
-            Login
+
+            {loading
+              ? "Logging In..."
+              : "Login"}
+
           </button>
 
         </form>
 
         <p className="text-center text-gray-500 mt-8">
 
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
 
           <a
             href="/signup"
-            className="text-black font-semibold"
+            className="text-black font-semibold hover:underline"
           >
             Signup
           </a>
@@ -166,5 +205,7 @@ export default function LoginPage() {
       </div>
 
     </main>
+
   );
+
 }
