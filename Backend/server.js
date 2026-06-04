@@ -777,377 +777,130 @@ app.get(
   }
 );
 
-/* =========================
-   CREATE BRAND PROFILE
-========================= */
+app.post("/api/requests", async (req, res) => {
+  try {
+    const { brand_id, influencer_id, campaign_id } = req.body;
 
-app.post(
-  "/api/create-brand-profile",
-  async (req, res) => {
+    const result = await pool.query(
+      `INSERT INTO requests (brand_id, influencer_id, campaign_id, status)
+       VALUES ($1, $2, $3, 'pending')
+       RETURNING *`,
+      [brand_id, influencer_id, campaign_id]
+    );
 
-    try {
+    res.json({
+      success: true,
+      request: result.rows[0],
+    });
 
-      const {
-        user_email,
-        company_name,
-        industry,
-        website,
-        location,
-        logo,
-        description
-      } = req.body;
+  } catch (error) {
+    console.log("Request API error:", error);
+    res.status(500).json({ success: false });
+  }
+});
 
-      await pool.query(
-        `
-        INSERT INTO brand_profiles
-        (
-          user_email,
-          company_name,
-          industry,
-          website,
-          location,
-          logo,
-          description
-        )
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7)
-        `,
-        [
-          user_email,
-          company_name,
-          industry,
-          website,
-          location,
-          logo,
-          description
-        ]
-      );
+app.get("/api/requests", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM requests ORDER BY created_at DESC"
+    );
 
-      res.json({
-        success: true,
-        message:
-          "Brand profile created successfully"
-      });
+    res.json({
+      success: true,
+      requests: result.rows,
+    });
 
-    } catch (error) {
+  } catch (error) {
+    console.log("Fetch requests error:", error);
+    res.status(500).json({ success: false });
+  }
+});
 
-      console.log(error);
+app.post("/api/brands/signup", async (req, res) => {
+  try {
+    const { name, email, password, company } = req.body;
 
-      res.status(500).json({
+    // 1. check if brand already exists
+    const existing = await pool.query(
+      "SELECT * FROM brands WHERE email = $1",
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.json({
         success: false,
-        message:
-          "Error creating profile"
+        message: "Brand already exists",
       });
-
     }
 
+    // 2. hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. insert brand
+    const result = await pool.query(
+      `INSERT INTO brands (name, email, password, company)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, email, company`,
+      [name, email, hashedPassword, company]
+    );
+
+    res.json({
+      success: true,
+      brand: result.rows[0],
+    });
+
+  } catch (error) {
+    console.log("Signup error:", error);
+    res.status(500).json({ success: false });
   }
-);
+});
 
-/* =========================
-   GET BRAND PROFILE
-========================= */
+app.post("/api/brands/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-app.get(
-  "/api/brand-profile/:email",
-  async (req, res) => {
+    // 1. find brand
+    const result = await pool.query(
+      "SELECT * FROM brands WHERE email = $1",
+      [email]
+    );
 
-    try {
+    const brand = result.rows[0];
 
-      const { email } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT *
-          FROM brand_profiles
-          WHERE user_email = $1
-          `,
-          [email]
-        );
-
-      if (
-        result.rows.length === 0
-      ) {
-
-        return res.json({
-          success: false,
-          profile: null
-        });
-
-      }
-
-      res.json({
-        success: true,
-        profile:
-          result.rows[0]
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
-    }
-
-  }
-);
-
-/* =========================
-   UPDATE BRAND PROFILE
-========================= */
-
-app.put(
-  "/api/update-brand-profile/:email",
-  async (req, res) => {
-
-    try {
-
-      const { email } =
-        req.params;
-
-      const {
-        company_name,
-        industry,
-        website,
-        location,
-        logo,
-        description
-      } = req.body;
-
-      await pool.query(
-        `
-        UPDATE brand_profiles
-        SET
-          company_name = $1,
-          industry = $2,
-          website = $3,
-          location = $4,
-          logo = $5,
-          description = $6
-        WHERE user_email = $7
-        `,
-        [
-          company_name,
-          industry,
-          website,
-          location,
-          logo,
-          description,
-          email
-        ]
-      );
-
-      res.json({
-        success: true,
-        message:
-          "Brand profile updated successfully"
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
+    if (!brand) {
+      return res.json({
         success: false,
-        message:
-          "Error updating profile"
+        message: "Brand not found",
       });
-
     }
 
-  }
-);
+    // 2. check password
+    const isMatch = await bcrypt.compare(password, brand.password);
 
-/* =========================
-   SEND COLLABORATION REQUEST
-========================= */
-
-app.post(
-  "/api/send-request",
-  async (req, res) => {
-
-    try {
-
-      const {
-        brand_email,
-        influencer_id,
-        message
-      } = req.body;
-
-      await pool.query(
-        `
-        INSERT INTO collaboration_requests
-        (
-          brand_email,
-          influencer_id,
-          message
-        )
-        VALUES
-        ($1,$2,$3)
-        `,
-        [
-          brand_email,
-          influencer_id,
-          message
-        ]
-      );
-
-      res.json({
-        success: true,
-        message:
-          "Request sent successfully"
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
-    }
-
-  }
-);
-
-/* =========================
-   GET REQUESTS FOR INFLUENCER
-========================= */
-
-app.get(
-  "/api/requests/:influencerId",
-  async (req, res) => {
-
-    try {
-
-      const { influencerId } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT *
-          FROM collaboration_requests
-          WHERE influencer_id = $1
-          ORDER BY created_at DESC
-          `,
-          [influencerId]
-        );
-
-      res.json({
-        success: true,
-        requests:
-          result.rows
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
-    }
-
-  }
-);
-
-
-/* =========================
-   GET COLLABORATION REQUESTS
-========================= */
-
-app.get(
-  "/api/requests/:influencerId",
-  async (req, res) => {
-
-    try {
-
-      const { influencerId } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT *
-          FROM collaboration_requests
-          WHERE influencer_id = $1
-          ORDER BY id DESC
-          `,
-          [influencerId]
-        );
-
-      res.json({
-        success: true,
-        requests: result.rows
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
-    }
-
-  }
-);
-
-app.get(
-  "/api/influencer-requests/:email",
-  async (req, res) => {
-
-    try {
-
-      const { email } = req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT
-            collaboration_requests.*,
-            brand_profiles.company_name,
-            brand_profiles.logo
-          FROM collaboration_requests
-          LEFT JOIN brand_profiles
-          ON collaboration_requests.brand_email =
-             brand_profiles.user_email
-          WHERE influencer_id IN (
-            SELECT id
-            FROM influencers
-            WHERE user_email = $1
-          )
-          ORDER BY created_at DESC
-          `,
-          [email]
-        );
-
-      res.json({
-        success: true,
-        requests: result.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
+    if (!isMatch) {
+      return res.json({
         success: false,
+        message: "Invalid password",
       });
-
     }
 
+    // 3. return safe brand data
+  res.json({
+  success: true,
+  role: "brand",
+  brand: {
+    id: brand.id,
+    name: brand.name,
+    email: brand.email,
+    company: brand.company,
+  },
+});
+
+  } catch (error) {
+    console.log("Login error:", error);
+    res.status(500).json({ success: false });
   }
-);
+});
 
 
 /* =========================

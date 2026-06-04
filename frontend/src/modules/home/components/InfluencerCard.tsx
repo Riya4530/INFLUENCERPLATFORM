@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type InfluencerCardProps = {
   id:  string;
@@ -22,6 +23,61 @@ export default function InfluencerCard({
   city,
   image,
 }: InfluencerCardProps) {
+  const [saved, setSaved] = useState(false);
+
+useEffect(() => {
+  const favourites = JSON.parse(
+    localStorage.getItem("favourites") || "[]"
+  );
+
+  setSaved(
+    favourites.some(
+      (item: any) => item.id === id
+    )
+  );
+}, [id]);
+
+const handleFavourite = (
+  e: React.MouseEvent
+) => {
+
+  e.preventDefault();
+
+  let favourites = JSON.parse(
+    localStorage.getItem("favourites") || "[]"
+  );
+
+  if (saved) {
+
+    favourites = favourites.filter(
+      (item: any) => item.id !== id
+    );
+
+    setSaved(false);
+
+  } else {
+
+    favourites.push({
+      id,
+      name,
+      category,
+      followers,
+      city,
+      instagram,
+      image,
+    });
+
+    setSaved(true);
+
+  }
+
+  localStorage.setItem(
+    "favourites",
+    JSON.stringify(favourites)
+  );
+
+};
+
   return (
     <Link href={`/influencers/${id}`}>
       <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition duration-300 cursor-pointer">
@@ -73,9 +129,20 @@ export default function InfluencerCard({
             </p>
           )}
 
-          <button className="w-full mt-4 bg-black text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
-            View Profile
-          </button>
+         <div className="flex gap-2 mt-4">
+
+  <button
+    onClick={handleFavourite}
+    className="px-4 py-3 border rounded-xl"
+  >
+    {saved ? "❤️ Saved" : "🤍 Save"}
+  </button>
+
+  <button className="flex-1 bg-black text-white py-3 rounded-xl font-semibold hover:opacity-90 transition">
+    View Profile
+  </button>
+
+</div>
 
         </div>
 
