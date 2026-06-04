@@ -547,8 +547,121 @@ app.get(
 
   }
 );
+/* =========================
+   INFLUENCERS BY CITY + CATEGORY
+========================= */
 
+app.get(
+  "/api/influencers/city/:city/category/:category",
+  async (req, res) => {
 
+    try {
+
+      const { city, category } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM influencer_profiles
+        WHERE LOWER(city) = LOWER($1)
+        AND LOWER(category) = LOWER($2)
+        ORDER BY name ASC
+        `,
+        [city, category]
+      );
+
+      res.json({
+        success: true,
+        influencers: result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Something went wrong",
+      });
+
+    }
+
+  }
+);
+/* =========================
+   GET INFLUENCERS BY CITY
+========================= */
+
+app.get(
+  "/api/influencers/city/:city",
+  async (req, res) => {
+
+    try {
+
+      const { city } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM influencer_profiles
+        WHERE LOWER(city) = LOWER($1)
+        ORDER BY followers DESC
+        `,
+        [city]
+      );
+
+      res.json({
+        success: true,
+        influencers: result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        influencers: [],
+      });
+
+    }
+
+  }
+);
+app.get(
+  "/api/influencers/city/:city",
+  async (req, res) => {
+
+    try {
+
+      const { city } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM influencer_profiles
+        WHERE LOWER(city) = LOWER($1)
+        `,
+        [city]
+      );
+
+      res.json({
+        success: true,
+        influencers: result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
 
 /* =========================
    GET PROFILE BY EMAIL
