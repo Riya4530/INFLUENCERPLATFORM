@@ -21,9 +21,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main>
-        <h1 className="text-5xl font-bold text-center mt-20">
-        Find Influencers
-      </h1>
+        
 
       <GoogleSearchBar />
       <HeroSection />
