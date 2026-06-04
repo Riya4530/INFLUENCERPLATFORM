@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const cloudinary = require("./cloudinary");
+require("dotenv").config();
 const { Pool, Client } = require("pg");
 
 const app = express();
@@ -219,6 +221,63 @@ app.post("/api/login", async (req, res) => {
 
 });
 
+/* =========================
+   FORGOT PASSWORD API
+========================= */
+
+app.put("/api/forgot-password", async (req, res) => {
+
+  try {
+
+    const { email, newPassword } = req.body;
+
+    const userCheck = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE email = $1
+      `,
+      [email]
+    );
+
+    if (userCheck.rows.length === 0) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Email not found",
+      });
+
+    }
+
+    const hashedPassword =
+      await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      `
+      UPDATE users
+      SET password = $1
+      WHERE email = $2
+      `,
+      [hashedPassword, email]
+    );
+
+    res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+
+  }
+
+});
 
 
 /* =========================
@@ -300,6 +359,60 @@ app.post(
   }
 );
 
+app.post("/api/upload-image", async (req, res) => {
+
+  try {
+
+    const { image } = req.body;
+
+    const result = await cloudinary.uploader.upload(
+      image,
+      {
+        folder: "influencers",
+      }
+    );
+
+    res.json({
+      success: true,
+      imageUrl: result.secure_url,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Upload failed",
+    });
+
+  }
+
+});
+app.post("/api/upload-image", async (req, res) => {
+  try {
+    const { image } = req.body;
+
+    const result = await cloudinary.uploader.upload(image, {
+      folder: "influencers",
+    });
+
+    console.log("Cloudinary URL:", result.secure_url);
+
+    res.json({
+      success: true,
+      imageUrl: result.secure_url,
+    });
+
+  } catch (error) {
+    console.log("UPLOAD ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Upload failed",
+    });
+  }
+});
 
 
 /* =========================

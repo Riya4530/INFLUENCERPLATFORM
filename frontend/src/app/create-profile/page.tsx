@@ -13,6 +13,8 @@ export default function CreateProfilePage() {
   const [bio, setBio] = useState("");
   const [instagram, setInstagram] = useState("");
   const [image, setImage] = useState("");
+const [uploading, setUploading] =
+  useState(false);
 
   const [profileExists, setProfileExists] =
     useState(false);
@@ -81,7 +83,61 @@ export default function CreateProfilePage() {
       );
 
   }, []);
+const handleImageUpload = async (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
 
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  setUploading(true);
+
+  const reader = new FileReader();
+
+  reader.readAsDataURL(file);
+
+  reader.onloadend = async () => {
+
+    try {
+
+      const response =
+        await fetch(
+          "http://localhost:5000/api/upload-image",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              image: reader.result,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (data.success) {
+
+        setImage(data.imageUrl);
+
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setUploading(false);
+
+    }
+
+  };
+
+};
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
@@ -291,17 +347,18 @@ export default function CreateProfilePage() {
               Profile Image URL
             </label>
 
-            <input
-              type="text"
-              value={image}
-              onChange={(e) =>
-                setImage(
-                  e.target.value
-                )
-              }
-              placeholder="Paste image URL"
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
-            />
+           <input
+  type="file"
+  accept="image/*"
+  onChange={handleImageUpload}
+  className="w-full border border-gray-300 rounded-2xl px-5 py-4"
+/>
+
+{uploading && (
+  <p className="text-blue-500 mt-2">
+    Uploading image...
+  </p>
+)}
           </div>
 
           <div>

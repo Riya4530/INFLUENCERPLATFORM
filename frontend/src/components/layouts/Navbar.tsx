@@ -92,12 +92,18 @@ export default function Navbar() {
           {user ? (
             <>
               <a
-                href="/dashboard"
-                className="relative group text-lg"
-              >
-                Dashboard
-                <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
-              </a>
+  href={
+    user?.role === "admin"
+      ? "/admin"
+      : user?.role === "brand"
+      ? "/brand-dashboard"
+      : "/dashboard"
+  }
+  className="relative group text-lg"
+>
+  Dashboard
+  <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
+</a>
 
               <button
                 onClick={handleLogout}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
 
@@ -10,8 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] =
     useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const router = useRouter();
 
   const handleLogin = async (
     e: React.FormEvent
@@ -19,20 +19,16 @@ export default function LoginPage() {
 
     e.preventDefault();
 
-    setLoading(true);
-
     try {
 
       const response = await fetch(
         "http://localhost:5000/api/login",
         {
           method: "POST",
-
           headers: {
             "Content-Type":
               "application/json",
           },
-
           body: JSON.stringify({
             email,
             password,
@@ -43,64 +39,27 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!data.success) {
-
         alert(data.message || "Login failed");
-
         return;
-
       }
 
       if (!data.user) {
-
-        alert(
-          "Login succeeded but no user returned from server"
-        );
-
+        alert("Login succeeded but no user returned from server");
         return;
-
       }
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      alert(data.message || "Login successful");
 
       /* ROLE BASED REDIRECT */
-
-      if (
-        data.user.role === "admin"
-      ) {
-
-        window.location.href =
-          "/admin";
-
-      }
-
-      else if (
-        data.user.role ===
-        "influencer"
-      ) {
-
-        window.location.href =
-          "/dashboard";
-
-      }
-
-      else if (
-        data.user.role ===
-        "brand"
-      ) {
-
-        window.location.href =
-          "/brand";
-
-      }
-
-      else {
-
-        window.location.href =
-          "/";
-
+     
+      if (data.user.role === "admin") {
+        router.push("/admin");
+      } else if (data.user.role === "brand") {
+        router.push("/brand-dashboard");
+      } else {
+        router.push("/dashboard");
       }
 
     } catch (error) {
@@ -111,19 +70,14 @@ export default function LoginPage() {
         "Something went wrong"
       );
 
-    } finally {
-
-      setLoading(false);
-
     }
 
   };
 
   return (
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
 
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-6 py-10">
-
-      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-2xl border border-gray-200">
+      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-gray-200">
 
         <div className="text-center mb-10">
 
@@ -181,30 +135,31 @@ export default function LoginPage() {
               className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
               required
             />
+            <a
+  href="/forgot-password"
+  className="text-blue-600 text-sm hover:underline"
+>
+  Forgot Password?
+</a>
 
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition disabled:opacity-50"
+            className="w-full block bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
           >
-
-            {loading
-              ? "Logging In..."
-              : "Login"}
-
+            Login
           </button>
 
         </form>
 
         <p className="text-center text-gray-500 mt-8">
 
-          Don't have an account?{" "}
+          Don’t have an account?{" "}
 
           <a
             href="/signup"
-            className="text-black font-semibold hover:underline"
+            className="text-black font-semibold"
           >
             Signup
           </a>
@@ -214,7 +169,5 @@ export default function LoginPage() {
       </div>
 
     </main>
-
   );
-
 }
