@@ -1,28 +1,28 @@
-"use client";
+import type { Metadata } from "next";
 
-import { useEffect, useState } from "react";
 import HeroSection from "@/modules/home/components/HeroSection";
 import CategoriesSection from "@/modules/home/components/CategoriesSection";
 import FeaturedInfluencersSection from "@/modules/home/components/FeaturedInfluencersSection";
 
+export const metadata: Metadata = {
+  title:
+    "Find Top Influencers Across India",
+
+  description:
+    "Discover food, fashion, lifestyle and tech influencers from cities across India. Connect brands with the right creators.",
+
+  alternates: {
+    canonical:
+      "https://www.influencerconnect.com",
+  },
+};
+
 export default function Home() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/test")
-      .then((res) => res.json())
-      .then((data) => {
-        setMessage(data.message);
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
   return (
     <main>
       <HeroSection />
 
       <CategoriesSection />
-
 
       <FeaturedInfluencersSection />
     </main>

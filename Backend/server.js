@@ -389,69 +389,37 @@ app.post("/api/upload-image", async (req, res) => {
   }
 
 });
-app.post("/api/upload-image", async (req, res) => {
-  try {
-    const { image } = req.body;
-
-    const result = await cloudinary.uploader.upload(image, {
-      folder: "influencers",
-    });
-
-    console.log("Cloudinary URL:", result.secure_url);
-
-    res.json({
-      success: true,
-      imageUrl: result.secure_url,
-    });
-
-  } catch (error) {
-    console.log("UPLOAD ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Upload failed",
-    });
-  }
-});
 
 
 /* =========================
    GET ALL INFLUENCERS
 ========================= */
 
-app.get(
-  "/api/influencers",
-  async (req, res) => {
+app.get("/api/influencers", async (req, res) => {
+  try {
+    const profiles = await pool.query(`
+      SELECT *
+      FROM influencer_profiles
+      ORDER BY id DESC
+    `);
 
-    try {
+    res.json({
+      success: true,
+      influencers: Array.isArray(profiles.rows)
+        ? profiles.rows
+        : [],
+    });
 
-      const profiles =
-        await pool.query(
-          `
-          SELECT *
-          FROM influencer_profiles
-          ORDER BY id DESC
-          `
-        );
+  } catch (error) {
+    console.log(error);
 
-      res.json({
-        success: true,
-        influencers: profiles.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong",
-      });
-
-    }
-
+    res.status(500).json({
+      success: false,
+      influencers: [],
+      message: "Something went wrong",
+    });
   }
-);
+});
 
 
 /* =========================
@@ -533,6 +501,46 @@ app.get(
       res.status(500).json({
         success: false,
         message: "Something went wrong",
+      });
+
+    }
+
+  }
+);
+app.get(
+  "/api/seo/influencer/:id",
+  async (req, res) => {
+
+    try {
+
+      const { id } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM influencer_profiles
+        WHERE id = $1
+        `,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false
+        });
+      }
+
+      res.json({
+        success: true,
+        influencer: result.rows[0]
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
       });
 
     }

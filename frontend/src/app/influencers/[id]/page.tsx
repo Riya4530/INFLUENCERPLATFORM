@@ -1,132 +1,202 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { Metadata } from "next";
 import Image from "next/image";
 
-export default function InfluencerProfilePage() {
-  const params = useParams();
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
 
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+export async function generateMetadata(
+  { params }: Props
+): Promise<Metadata> {
 
-  const [influencer, setInfluencer] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { id } = await params;
 
-  useEffect(() => {
-    if (!id) return;
+  try {
 
-    const fetchInfluencer = async () => {
-      try {
-        setLoading(true);
-
-        const response = await fetch(
-          `http://localhost:5000/api/influencers/${id}`
-        );
-
-        const data = await response.json();
-
-        console.log("API Response:", data);
-
-        if (data?.success && data?.influencer) {
-          setInfluencer(data.influencer);
-        } else {
-          setInfluencer(null);
-        }
-      } catch (error) {
-        console.log("Fetch error:", error);
-        setInfluencer(null);
-      } finally {
-        setLoading(false);
+    const response = await fetch(
+      `http://localhost:5000/api/seo/influencer/${id}`,
+      {
+        cache: "no-store",
       }
+    );
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return {
+        title: "Influencer Not Found",
+      };
+    }
+
+    const influencer = data.influencer;
+
+    return {
+      title: `${influencer.name} | ${influencer.category} Influencer in ${influencer.city}`,
+
+      description:
+        `${influencer.name} is a ${influencer.category} influencer from ${influencer.city} with ${influencer.followers} followers.`,
+
+      alternates: {
+        canonical:
+          `https://www.influencerconnect.com/influencers/${influencer.id}`,
+      },
+
+      openGraph: {
+        title: `${influencer.name} | Influencer Connect`,
+        description:
+          influencer.bio ||
+          `${influencer.category} influencer in ${influencer.city}`,
+        images: [
+          {
+            url: influencer.image,
+          },
+        ],
+      },
     };
 
-    fetchInfluencer();
-  }, [id]);
+  } catch (error) {
 
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <h1 className="text-4xl font-bold">Loading...</h1>
-      </main>
-    );
+    console.log(error);
+
+    return {
+      title: "Influencer Profile",
+    };
+
   }
 
-  if (!influencer) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <h1 className="text-3xl font-bold text-red-500">
-          Influencer not found
-        </h1>
-      </main>
+}
+
+export default async function InfluencerProfilePage(
+  { params }: Props
+) {
+
+  const { id } = await params;
+
+  try {
+
+    const response = await fetch(
+      `http://localhost:5000/api/influencers/${id}`,
+      {
+        cache: "no-store",
+      }
     );
-  }
 
-  return (
-    <main className="min-h-screen bg-gray-100 py-10 px-6">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden shadow-xl">
+    const data = await response.json();
 
-       <div className="relative w-full h-[500px]">
+    console.log("Fetched Influencer:", data);
 
-  {influencer.image ? (
-    <Image
-      src={influencer.image}
-      alt={influencer.name}
-      fill
-      className="object-cover"
-    />
-  ) : (
-    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-xl font-semibold">
-      No Image Available
-    </div>
-  )}
+    if (!data.success) {
 
-
-        </div>
-
-        <div className="p-10">
-
-          <h1 className="text-5xl font-bold mb-4">
-            {influencer.name}
+      return (
+        <main className="min-h-screen flex items-center justify-center">
+          <h1 className="text-3xl font-bold text-red-500">
+            Influencer not found
           </h1>
+        </main>
+      );
 
-          <p className="text-2xl text-gray-500 mb-4">
-            {influencer.category}
-          </p>
+    }
 
-          <p className="text-xl font-semibold mb-6">
-            {influencer.followers} Followers
-          </p>
+    const influencer = data.influencer;
 
-          <p className="text-lg text-gray-700 leading-8 mb-8">
-            {influencer.bio}
-          </p>
+    return (
+      <main className="min-h-screen bg-gray-100 py-10 px-6">
 
-          <div className="flex gap-4 flex-wrap">
+        <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden shadow-xl">
 
-            {influencer.instagram && (
-              <a
-                href={`https://instagram.com/${influencer.instagram.replace("@", "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-black text-white px-8 py-4 rounded-2xl font-semibold hover:opacity-90 transition"
-              >
-                View Instagram
-              </a>
-            )}
+          <div className="relative w-full h-[500px]">
 
-            {influencer.user_email && (
-              <a
-                href={`mailto:${influencer.user_email}`}
-                className="inline-block bg-pink-600 text-white px-8 py-4 rounded-2xl font-semibold hover:opacity-90 transition"
-              >
-                Hire Influencer
-              </a>
+            {influencer.image ? (
+
+              <Image
+                src={influencer.image}
+                alt={influencer.name}
+                fill
+                priority
+                className="object-cover"
+              />
+
+            ) : (
+
+              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                No Image Available
+              </div>
+
             )}
 
           </div>
 
+          <div className="p-10">
+
+            <h1 className="text-5xl font-bold mb-4">
+              {influencer.name}
+            </h1>
+
+            <p className="text-2xl text-gray-500 mb-4">
+              {influencer.category}
+            </p>
+
+            <p className="text-xl font-semibold mb-4">
+              📍 {influencer.city}
+            </p>
+
+            <p className="text-xl font-semibold mb-6">
+              👥 {influencer.followers} Followers
+            </p>
+
+            <p className="text-lg text-gray-700 leading-8 mb-8">
+              {influencer.bio}
+            </p>
+
+            <div className="flex gap-4 flex-wrap">
+
+              {influencer.instagram && (
+
+                <a
+                  href={`https://instagram.com/${influencer.instagram.replace("@", "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-black text-white px-8 py-4 rounded-2xl font-semibold"
+                >
+                  View Instagram
+                </a>
+
+              )}
+
+              {influencer.user_email && (
+
+                <a
+                  href={`mailto:${influencer.user_email}`}
+                  className="inline-block bg-pink-600 text-white px-8 py-4 rounded-2xl font-semibold"
+                >
+                  Hire Influencer
+                </a>
+
+              )}
+
+            </div>
+
+          </div>
+
         </div>
-      </div>
-    </main>
-  );
+
+      </main>
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <h1 className="text-3xl font-bold text-red-500">
+          Error loading influencer
+        </h1>
+      </main>
+    );
+
+  }
+
 }
