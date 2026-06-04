@@ -96,7 +96,7 @@ export default function Navbar() {
     user?.role === "admin"
       ? "/admin"
       : user?.role === "brand"
-      ? "/brand-dashboard"
+      ? "/brand"
       : "/dashboard"
   }
   className="relative group text-lg"
