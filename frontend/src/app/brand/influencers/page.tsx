@@ -17,12 +17,16 @@ export default function BrandInfluencersPage() {
 
   const [savedSearches, setSavedSearches] =
     useState<any[]>([]);
+  const [recommended, setRecommended] =
+  useState<any[]>([]);
 
   const [selectedInfluencer, setSelectedInfluencer] =
     useState<any>(null);
 
   const [campaignId, setCampaignId] =
     useState("");
+  const [campaigns, setCampaigns] =
+  useState<any[]>([]);
 
   useEffect(() => {
 
@@ -38,9 +42,24 @@ export default function BrandInfluencersPage() {
 
         const data = await res.json();
 
-        setInfluencers(
-          data.influencers || data || []
-        );
+        const list =
+  data.influencers || data || [];
+
+setInfluencers(list);
+
+const recommendedList =
+  [...list]
+    .sort(
+      (a, b) =>
+        Number(b.followers || 0) -
+        Number(a.followers || 0)
+    )
+    .slice(0, 3);
+
+setRecommended(
+  recommendedList
+);
+
 
       } catch (error) {
 
@@ -68,6 +87,38 @@ export default function BrandInfluencersPage() {
     );
 
     setSavedSearches(searches);
+ 
+    const fetchCampaigns = async () => {
+
+  try {
+
+    const user = JSON.parse(
+      localStorage.getItem("user") || "{}"
+    );
+
+    const response = await fetch(
+      `http://localhost:5000/api/campaigns/${user.id}`
+    );
+
+    const data =
+      await response.json();
+
+    setCampaigns(
+      data.campaigns || []
+    );
+
+  } catch (error) {
+
+    console.log(
+      "Campaign fetch error:",
+      error
+    );
+
+  }
+
+};
+
+fetchCampaigns();
 
   }, []);
 
@@ -356,6 +407,8 @@ export default function BrandInfluencersPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
+       
+
         {filteredInfluencers.map(
           (inf: any) => (
 
@@ -412,44 +465,92 @@ export default function BrandInfluencersPage() {
               Invite {selectedInfluencer.name}
             </h2>
 
-            <p className="mb-4 text-gray-600">
-              Enter Campaign ID
-            </p>
+           <p className="mb-4 text-gray-600">
+  Select Campaign
+</p>
 
-            <input
-              value={campaignId}
-              onChange={(e) =>
-                setCampaignId(
-                  e.target.value
-                )
-              }
-              placeholder="Campaign ID"
-              className="border p-2 w-full mb-4 rounded-lg"
-            />
+<select
+  value={campaignId}
+  onChange={(e) =>
+    setCampaignId(
+      e.target.value
+    )
+  }
+  className="border p-2 w-full mb-4 rounded-lg"
+>
+
+  <option value="">
+    Select Campaign
+  </option>
+
+  {campaigns.map(
+    (campaign: any) => (
+
+      <option
+        key={campaign.id}
+        value={campaign.id}
+      >
+        {campaign.title}
+      </option>
+
+    )
+  )}
+
+</select>
 
             <div className="flex gap-2">
 
               <button
                 className="bg-black text-white flex-1 py-2 rounded-xl"
-                onClick={() => {
+                onClick={async () => {
 
-                  console.log({
-                    influencer:
-                      selectedInfluencer,
-                    campaignId,
-                  });
+  try {
 
-                  alert(
-                    "Invite prepared"
-                  );
+    const user = JSON.parse(
+      localStorage.getItem("user") || "{}"
+    );
 
-                  setSelectedInfluencer(
-                    null
-                  );
+    console.log("USER =", user);
+console.log("BRAND ID =", user?.id);
+console.log("INFLUENCER ID =", selectedInfluencer?.id);
 
-                  setCampaignId("");
+    const response = await fetch(
+      "http://localhost:5000/api/invitations",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },                
+        body: JSON.stringify({
+          brand_id: user.id,
+          influencer_id:
+            selectedInfluencer.id,
+          campaign_id:
+            campaignId,
+        }),
+      }
+    );
 
-                }}
+    const data =
+      await response.json();
+
+    alert(data.message);
+
+    setSelectedInfluencer(null);
+    setCampaignId("");
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      "Failed to send invitation"
+    );
+
+  }
+
+}}
               >
                 Send Invite
               </button>

@@ -792,7 +792,182 @@ app.put(
   }
 );
 
+app.post(
+  "/api/invitations",
+  async (req, res) => {
 
+    try {
+
+      console.log("Invitation Request:", req.body);
+
+      const {
+        brand_id,
+        influencer_id,
+        campaign_id
+      } = req.body;
+
+      await pool.query(
+        `
+        INSERT INTO requests
+        (
+          brand_id,
+          influencer_id,
+          campaign_id,
+          status
+        )
+        VALUES
+        ($1, $2, $3, 'Pending')
+        `,
+        [
+          brand_id,
+          influencer_id,
+          campaign_id
+        ]
+      );
+
+      res.json({
+        success: true,
+        message: "Invitation sent"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to send invitation"
+      });
+
+    }
+
+  }
+);
+
+
+app.get(
+  "/api/invitations/:influencerId",
+  async (req, res) => {
+
+    try {
+
+      const { influencerId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            requests.*,
+            campaigns.title,
+            campaigns.budget,
+            campaigns.category,
+            campaigns.description
+
+          FROM requests
+
+          LEFT JOIN campaigns
+            ON campaigns.id =
+               requests.campaign_id::integer
+
+          WHERE requests.influencer_id = $1
+
+          ORDER BY requests.created_at DESC
+          `,
+          [influencerId]
+        );
+
+      res.json({
+        success: true,
+        invitations:
+          result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+
+
+
+app.put(
+  "/api/quotation/:requestId",
+  async (req, res) => {
+
+    try {
+
+      const { requestId } =
+        req.params;
+
+      const {
+        quotation_amount
+      } = req.body;
+
+      await pool.query(
+        `
+        UPDATE requests
+        SET
+          quotation_amount = $1
+        WHERE id = $2
+        `,
+        [
+          quotation_amount,
+          requestId
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Quotation sent successfully"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+
+app.get("/api/brand-quotations/:brandId", async (req, res) => {
+  try {
+    const { brandId } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM requests
+      WHERE brand_id = $1
+      ORDER BY created_at DESC
+      `,
+      [brandId]
+    );
+
+    res.json({
+      success: true,
+      quotations: result.rows
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false });
+  }
+});
 
 /* =========================
    CONTACT MESSAGE API
@@ -929,6 +1104,43 @@ app.get("/api/requests", async (req, res) => {
   }
 });
 
+app.put(
+  "/api/requests/:id",
+  async (req, res) => {
+
+    try {
+
+      const { id } = req.params;
+
+      const { status } = req.body;
+
+      await pool.query(
+        `
+        UPDATE requests
+        SET status = $1
+        WHERE id = $2
+        `,
+        [status, id]
+      );
+
+      res.json({
+        success: true,
+        message: "Request updated",
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+
 app.post("/api/brands/signup", async (req, res) => {
   try {
     const { name, email, password, company } = req.body;
@@ -1015,6 +1227,110 @@ app.post("/api/brands/login", async (req, res) => {
   }
 });
 
+/* =========================
+   CREATE CAMPAIGN
+========================= */
+
+app.post(
+  "/api/campaigns",
+  async (req, res) => {
+
+    try {
+
+      const {
+        brand_id,
+        title,
+        budget,
+        category,
+        description
+      } = req.body;
+
+      const result =
+        await pool.query(
+          `
+          INSERT INTO campaigns
+          (
+            brand_id,
+            title,
+            budget,
+            category,
+            description
+          )
+          VALUES
+          ($1, $2, $3, $4, $5)
+          RETURNING *
+          `,
+          [
+            brand_id,
+            title,
+            budget,
+            category,
+            description
+          ]
+        );
+
+      res.json({
+        success: true,
+        campaign:
+          result.rows[0]
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+
+/* =========================
+   GET BRAND CAMPAIGNS
+========================= */
+
+app.get(
+  "/api/campaigns/:brandId",
+  async (req, res) => {
+
+    try {
+
+      const { brandId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT *
+          FROM campaigns
+          WHERE brand_id = $1
+          ORDER BY id DESC
+          `,
+          [brandId]
+        );
+
+      res.json({
+        success: true,
+        campaigns:
+          result.rows
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
 
 /* =========================
    SERVER START

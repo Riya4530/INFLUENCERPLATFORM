@@ -2,60 +2,74 @@
 
 import { useEffect, useState } from "react";
 
-export default function BrandRequestsPage() {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function RequestsPage() {
+
+  const [requests, setRequests] =
+    useState<any[]>([]);
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
 
-        const res = await fetch("http://localhost:5000/api/requests");
-        const data = await res.json();
+    const data = JSON.parse(
+      localStorage.getItem("brandRequests") || "[]"
+    );
 
-        setRequests(data.requests || []);
-      } catch (error) {
-        console.log(error);
-        setRequests([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setRequests(data);
 
-    fetchRequests();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="p-10 text-xl font-bold">Loading requests...</div>
-    );
-  }
-
   return (
-    <div className="p-10">
-      <h1 className="text-4xl font-bold mb-6">Brand Requests</h1>
 
-      {requests.length === 0 ? (
-        <p>No requests found</p>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((req: any) => (
+    <main className="max-w-7xl mx-auto p-10">
+
+      <h1 className="text-4xl font-bold mb-8">
+        Collaboration Requests
+      </h1>
+
+      <div className="space-y-4">
+
+        {requests.length === 0 && (
+          <p>No requests yet.</p>
+        )}
+
+        {requests.map(
+          (request, index) => (
+
             <div
-              key={req.id}
-              className="border p-4 rounded-xl bg-white shadow"
+              key={index}
+              className="bg-white border rounded-2xl p-6"
             >
-              <p><b>Brand ID:</b> {req.brand_id}</p>
-              <p><b>Influencer ID:</b> {req.influencer_id}</p>
-              <p><b>Campaign ID:</b> {req.campaign_id}</p>
+
+              <h2 className="text-xl font-bold">
+                {request.influencerName}
+              </h2>
+
               <p>
-                <b>Status:</b>{" "}
-                <span className="text-orange-600">{req.status}</span>
+                Campaign: {request.campaignId}
               </p>
+
+             <p>
+  Status: {request.status}
+</p>
+
+{request.quoteAmount && (
+
+  <p className="mt-2 text-green-600 font-semibold">
+
+    Quote Amount:
+    ₹{request.quoteAmount}
+
+  </p>
+
+)}
+
             </div>
-          ))}
-        </div>
-      )}
-    </div>
+
+          )
+        )}
+
+      </div>
+
+    </main>
+
   );
 }

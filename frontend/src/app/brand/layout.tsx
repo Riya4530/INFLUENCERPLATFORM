@@ -22,10 +22,15 @@ export default function BrandLayout({
           <Link href="/brand/create-campaign">Create Campaign</Link>
           <Link href="/brand/influencers">Find Influencers</Link>
           <Link href="/brand/requests">Requests</Link>
+            <Link href="/brand/quotations">
+    Quotations
+  </Link>
+
           <Link href="/brand/analytics">Analytics</Link>
           <Link href="/brand/recommendations">
   Recommendations
 </Link>
+
         </nav>
       </aside>
 
