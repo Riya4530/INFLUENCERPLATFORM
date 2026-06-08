@@ -8,39 +8,65 @@ export default function BrandQuotationsPage() {
     useState<any[]>([]);
 
   useEffect(() => {
+  fetchQuotations();
+}, []);
+
+const fetchQuotations = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const response = await fetch(
+      `http://localhost:5000/api/brand-quotations/${user.id}`
+    );
+
+    const data = await response.json();
+
+    console.log("🔥 BRAND QUOTATIONS RESPONSE:", data);
+
+    setQuotations(data.quotations || []);
+
+    console.log("🔥 STATE SET:", data.quotations);
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const updateDealStatus = async (
+  requestId: number,
+  status: string
+) => {
+
+  try {
+
+    const response = await fetch(
+      `http://localhost:5000/api/deal/${requestId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          deal_status: status,
+        }),
+      }
+    );
+
+    const data =
+      await response.json();
+
+    alert(data.message);
 
     fetchQuotations();
 
-  }, []);
+  } catch (error) {
 
-  const fetchQuotations =
-    async () => {
+    console.log(error);
 
-      try {
+  }
 
-      const user = JSON.parse(
-  localStorage.getItem("user") || "{}"
-);
-
-        const response =
-          await fetch(
-            `http://localhost:5000/api/brand-quotations/${user.id}`
-          );
-
-        const data =
-          await response.json();
-
-        setQuotations(
-          data.quotations || []
-        );
-
-      } catch (error) {
-
-        console.log(error);
-
-      }
-
-    };
+};
 
   return (
 
@@ -62,20 +88,54 @@ export default function BrandQuotationsPage() {
                 className="bg-white p-8 rounded-3xl shadow-sm"
               >
 
-                <h2 className="text-2xl font-bold">
-                  Campaign ID:
-                  {quote.campaign_id}
-                </h2>
+               <h2 className="text-2xl font-bold">
+  {quote.title}
+</h2>
 
-                <p className="mt-2">
-                  Influencer ID:
-                  {quote.influencer_id}
-                </p>
+<p className="mt-2 text-gray-600">
+  Influencer:
+  {" "}
+  {quote.influencer_name}
+</p>
 
-                <p className="mt-2 text-lg font-semibold">
-                  Quote:
-                  ₹{quote.quotation_amount}
-                </p>
+<p className="mt-4 text-xl font-bold text-green-600">
+  Quote:
+  ₹{quote.quotation_amount}
+</p>
+
+<p className="mt-2">
+  Deal Status:
+  {" "}
+  {quote.deal_status || "Pending"}
+</p>
+
+<div className="flex gap-3 mt-4">
+
+  <button
+    onClick={() =>
+      updateDealStatus(
+        quote.id,
+        "Accepted"
+      )
+    }
+    className="bg-green-600 text-white px-4 py-2 rounded-xl"
+  >
+    Accept Quote
+  </button>
+
+  <button
+    onClick={() =>
+      updateDealStatus(
+        quote.id,
+        "Rejected"
+      )
+    }
+    className="bg-red-600 text-white px-4 py-2 rounded-xl"
+  >
+    Reject Quote
+  </button>
+
+</div>
 
               </div>
 

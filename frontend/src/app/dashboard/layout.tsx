@@ -87,6 +87,17 @@ export default function DashboardLayout({
             Quotations
           </Link>
 
+<Link
+  href="/dashboard/collaborations"
+  className={`block p-4 rounded-xl ${
+    pathname === "/dashboard/collaborations"
+      ? "bg-white text-black"
+      : "hover:bg-gray-900"
+  }`}
+>
+  My Collaborations
+</Link>
+
           <Link
             href="/dashboard/messages"
             className={`block p-4 rounded-xl ${

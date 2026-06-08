@@ -3,73 +3,109 @@
 import { useEffect, useState } from "react";
 
 export default function RequestsPage() {
-
-  const [requests, setRequests] =
-    useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
-    const data = JSON.parse(
-      localStorage.getItem("brandRequests") || "[]"
-    );
-
-    setRequests(data);
-
+    fetchRequests();
   }, []);
 
+  const fetchRequests = async () => {
+    try {
+      const user = JSON.parse(
+        localStorage.getItem("user") || "{}"
+      );
+
+      const response = await fetch(
+        `http://localhost:5000/api/brand-requests/${user.id}`
+      );
+
+      const data = await response.json();
+
+      setRequests(data.requests || []);
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="p-10">
+        <h1 className="text-3xl font-bold">
+          Loading Requests...
+        </h1>
+      </main>
+    );
+  }
+
   return (
+    <main className="min-h-screen bg-gray-100 p-10">
+      <div className="max-w-6xl mx-auto">
 
-    <main className="max-w-7xl mx-auto p-10">
+        <div className="mb-10">
+          <h1 className="text-5xl font-bold mb-3">
+            Collaboration Requests
+          </h1>
 
-      <h1 className="text-4xl font-bold mb-8">
-        Collaboration Requests
-      </h1>
+          <p className="text-gray-500 text-lg">
+            Track all influencer invitations.
+          </p>
+        </div>
 
-      <div className="space-y-4">
+        <div className="space-y-6">
 
-        {requests.length === 0 && (
-          <p>No requests yet.</p>
-        )}
+          {requests.length === 0 && (
+            <div className="bg-white p-8 rounded-3xl">
+              No requests found.
+            </div>
+          )}
 
-        {requests.map(
-          (request, index) => (
+          {requests.map((request) => (
 
             <div
-              key={index}
-              className="bg-white border rounded-2xl p-6"
+              key={request.id}
+              className="bg-white p-8 rounded-3xl shadow-sm"
             >
 
-              <h2 className="text-xl font-bold">
-                {request.influencerName}
+              <h2 className="text-2xl font-bold">
+                {request.influencer_name}
               </h2>
 
-              <p>
-                Campaign: {request.campaignId}
+              <p className="text-gray-500 mt-2">
+                Campaign: {request.title}
               </p>
 
-             <p>
-  Status: {request.status}
-</p>
+              <p className="text-gray-500">
+                Campaign ID: {request.campaign_id}
+              </p>
 
-{request.quoteAmount && (
+              <div className="mt-4">
 
-  <p className="mt-2 text-green-600 font-semibold">
+                <span
+                  className={`px-4 py-2 rounded-full text-sm font-medium
+                    ${
+                      request.status === "Accepted"
+                        ? "bg-green-100 text-green-700"
+                        : request.status === "Rejected"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                >
+                  {request.status}
+                </span>
 
-    Quote Amount:
-    ₹{request.quoteAmount}
-
-  </p>
-
-)}
+              </div>
 
             </div>
 
-          )
-        )}
+          ))}
+
+        </div>
 
       </div>
-
     </main>
-
   );
 }

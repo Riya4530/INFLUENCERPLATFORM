@@ -210,6 +210,21 @@ function QuoteCard({
 
       )}
 
+      {request.deal_status && (
+
+  <p
+    className={`mt-2 font-semibold ${
+      request.deal_status === "Accepted"
+        ? "text-green-600"
+        : "text-red-600"
+    }`}
+  >
+    Brand Response:
+    {request.deal_status}
+  </p>
+
+)}
+
     </div>
 
   );

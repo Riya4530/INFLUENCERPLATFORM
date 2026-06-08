@@ -948,16 +948,23 @@ app.get("/api/brand-quotations/:brandId", async (req, res) => {
   try {
     const { brandId } = req.params;
 
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM requests
-      WHERE brand_id = $1
-      ORDER BY created_at DESC
-      `,
-      [brandId]
-    );
-
+  const result = await pool.query(
+  `
+  SELECT
+    r.*,
+    c.title,
+    i.name AS influencer_name
+  FROM requests r
+  LEFT JOIN campaigns c
+    ON c.id::text = r.campaign_id
+  LEFT JOIN influencer_profiles i
+    ON i.id = r.influencer_id
+  WHERE r.brand_id = $1
+  AND r.quotation_amount IS NOT NULL
+  ORDER BY r.created_at DESC
+  `,
+  [brandId]
+); 
     res.json({
       success: true,
       quotations: result.rows
@@ -968,6 +975,192 @@ app.get("/api/brand-quotations/:brandId", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+app.put(
+  "/api/deal/:requestId",
+  async (req, res) => {
+
+    try {
+
+      const { requestId } =
+        req.params;
+
+      const { deal_status } =
+        req.body;
+
+      await pool.query(
+        `
+        UPDATE requests
+        SET deal_status = $1
+        WHERE id = $2
+        `,
+        [
+          deal_status,
+          requestId
+        ]
+      );
+
+      res.json({
+        success: true,
+        message:
+          "Deal status updated"
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false
+      });
+
+    }
+
+  }
+);
+
+app.get(
+  "/api/collaborations/:brandId",
+  async (req, res) => {
+
+    try {
+
+      const { brandId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            r.*,
+            c.title,
+            i.name AS influencer_name
+          FROM requests r
+          LEFT JOIN campaigns c
+            ON c.id::text = r.campaign_id
+          LEFT JOIN influencer_profiles i
+            ON i.id = r.influencer_id
+          WHERE r.brand_id = $1
+          AND r.deal_status = 'Accepted'
+          ORDER BY r.created_at DESC
+          `,
+          [brandId]
+        );
+
+      res.json({
+        success: true,
+        collaborations:
+          result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+
+app.get(
+  "/api/my-collaborations/:influencerId",
+  async (req, res) => {
+
+    try {
+
+      const { influencerId } =
+        req.params;
+
+      const result =
+        await pool.query(
+          `
+          SELECT
+            r.*,
+            c.title,
+            b.name AS brand_name
+          FROM requests r
+          LEFT JOIN campaigns c
+            ON c.id::text = r.campaign_id
+          LEFT JOIN users b
+            ON b.id = r.brand_id
+          WHERE r.influencer_id = $1
+          AND r.deal_status = 'Accepted'
+          ORDER BY r.created_at DESC
+          `,
+          [influencerId]
+        );
+
+      res.json({
+        success: true,
+        collaborations:
+          result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+
+
+app.get(
+  "/api/brand-requests/:brandId",
+  async (req, res) => {
+    try {
+      const { brandId } = req.params;
+
+      const result = await pool.query(
+        `
+        SELECT
+          requests.*,
+          campaigns.title,
+          influencer_profiles.name AS influencer_name
+
+        FROM requests
+
+        LEFT JOIN campaigns
+          ON campaigns.id::text =
+             requests.campaign_id::text
+
+        LEFT JOIN influencer_profiles
+          ON influencer_profiles.id::text =
+             requests.influencer_id::text
+
+        WHERE requests.brand_id::text = $1
+
+        ORDER BY requests.created_at DESC
+        `,
+        [brandId]
+      );
+
+      res.json({
+        success: true,
+        requests: result.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+  }
+);
+
 
 /* =========================
    CONTACT MESSAGE API

@@ -532,13 +532,37 @@ console.log("INFLUENCER ID =", selectedInfluencer?.id);
       }
     );
 
-    const data =
-      await response.json();
+  const data =
+  await response.json();
 
-    alert(data.message);
+if (data.success) {
 
-    setSelectedInfluencer(null);
-    setCampaignId("");
+  const existingRequests = JSON.parse(
+    localStorage.getItem("brandRequests") || "[]"
+  );
+
+  existingRequests.push({
+    influencerName:
+      selectedInfluencer.name,
+    campaignId:
+      campaignId,
+    status: "Pending",
+    quoteAmount: null,
+  });
+
+  localStorage.setItem(
+    "brandRequests",
+    JSON.stringify(
+      existingRequests
+    )
+  );
+}
+
+alert(data.message);
+
+setSelectedInfluencer(null);
+setCampaignId("");
+
 
   } catch (error) {
 
