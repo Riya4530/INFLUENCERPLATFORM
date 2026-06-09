@@ -4,7 +4,7 @@ import HeroSection from "@/modules/home/components/HeroSection";
 import CategoriesSection from "@/modules/home/components/CategoriesSection";
 import FeaturedInfluencersSection from "@/modules/home/components/FeaturedInfluencersSection";
 import CityExploreSection from "@/modules/home/components/CityExploreSection";
-import GoogleSearchBar from "@/modules/home/components/GoogleSearchBar";
+
 export const metadata: Metadata = {
   title:
     "Find Top Influencers Across India",
@@ -21,9 +21,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main>
-        
-
-      <GoogleSearchBar />
+     
       <HeroSection />
 
       <CategoriesSection />

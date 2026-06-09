@@ -97,7 +97,26 @@ export default function DashboardLayout({
 >
   My Collaborations
 </Link>
-
+<Link
+            href="/dashboard/invoices"
+            className={`block p-4 rounded-xl ${
+              pathname === "/dashboard/invoices"
+                ? "bg-white text-black"
+                : "hover:bg-gray-900"
+            }`}
+          >
+            Invoices
+          </Link>
+<Link
+            href="/dashboard/earnings"
+            className={`block p-4 rounded-xl ${
+              pathname === "/dashboard/earnings"
+                ? "bg-white text-black"
+                : "hover:bg-gray-900"
+            }`}
+          >
+            Earnings
+          </Link>
           <Link
             href="/dashboard/messages"
             className={`block p-4 rounded-xl ${

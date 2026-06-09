@@ -235,15 +235,19 @@ export default function ContactPage() {
 
                 <textarea
                   rows={6}
+                  maxLength={500}
                   placeholder="Write your message..."
                   value={message}
+                  
                   onChange={(e) =>
                     setMessage(e.target.value)
                   }
                   className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
                   required
                 ></textarea>
-
+  <p className="text-sm text-gray-500 mt-2 text-right">
+    {message.length}/500 characters
+  </p>
               </div>
 
               <button

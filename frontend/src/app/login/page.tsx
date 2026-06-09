@@ -105,6 +105,16 @@ export default function LoginPage() {
             className="w-full border p-4 rounded-xl"
             required
           />
+          <div className="text-right">
+
+  <a
+    href="/forgot-password"
+    className="text-sm text-gray-500 hover:text-black"
+  >
+    Forgot Password?
+  </a>
+
+</div>
 
           <button
             type="submit"
