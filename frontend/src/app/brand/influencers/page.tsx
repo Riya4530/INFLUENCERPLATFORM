@@ -28,6 +28,32 @@ export default function BrandInfluencersPage() {
   const [campaigns, setCampaigns] =
   useState<any[]>([]);
 
+
+  useEffect(() => {
+
+    fetch(
+      "http://localhost:5000/api/influencers"
+    )
+      .then((res) => res.json())
+      .then((data) => {
+
+        const list =
+          data.influencers || [];
+
+        setInfluencers(list);
+
+      })
+      .catch((error) => {
+
+        console.log(error);
+
+        setInfluencers([]);
+
+      });
+
+  }, []);
+
+
   useEffect(() => {
 
     const fetchInfluencers = async () => {
@@ -122,103 +148,77 @@ fetchCampaigns();
 
   }, []);
 
-  const filteredInfluencers =
-    influencers.filter(
-      (influencer: any) => {
+ const filteredInfluencers =
+  influencers.filter(
+    (influencer: any) => {
 
-        const matchesSearch =
+      const text =
+        search.toLowerCase();
+
+     const words =
+  text
+    .split(" ")
+    .filter(
+      (word) =>
+        ![
+          "in",
+          "influencer",
+          "influencers",
+          "creator",
+          "creators",
+          "for",
+          "the",
+        ].includes(word)
+    );
+
+      return words.every(
+        (word) =>
+
           influencer.name
             ?.toLowerCase()
-            .includes(
-              search.toLowerCase()
-            );
+            .includes(word)
 
-        const matchesCategory =
-          category === "All" ||
-          influencer.category === category;
+          ||
 
-        const matchesCity =
-          cityFilter === "All" ||
-          influencer.city === cityFilter;
+          influencer.city
+            ?.toLowerCase()
+            .includes(word)
 
-        const followers =
-          Number(
-            influencer.followers || 0
-          );
+          ||
 
-        let matchesFollowers = true;
+          influencer.category
+            ?.toLowerCase()
+            .includes(word)
 
-        if (
-          followersFilter ===
-          "0-10000"
-        ) {
-          matchesFollowers =
-            followers <= 10000;
-        }
+          ||
 
-        if (
-          followersFilter ===
-          "10000-50000"
-        ) {
-          matchesFollowers =
-            followers > 10000 &&
-            followers <= 50000;
-        }
+          influencer.bio
+            ?.toLowerCase()
+            .includes(word)
+      );
 
-        if (
-          followersFilter ===
-          "50000-100000"
-        ) {
-          matchesFollowers =
-            followers > 50000 &&
-            followers <= 100000;
-        }
-
-        if (
-          followersFilter ===
-          "100000+"
-        ) {
-          matchesFollowers =
-            followers > 100000;
-        }
-
-        return (
-          matchesSearch &&
-          matchesCategory &&
-          matchesCity &&
-          matchesFollowers
-        );
-
-      }
-    );
-
-  const saveCurrentSearch = () => {
-
-    const newSearch = {
-      search,
-      category,
-      followersFilter,
-      cityFilter,
-    };
-
-    const searches = JSON.parse(
-      localStorage.getItem(
-        "savedSearches"
-      ) || "[]"
-    );
-
-    searches.push(newSearch);
-
-    localStorage.setItem(
-      "savedSearches",
-      JSON.stringify(searches)
-    );
-
-    setSavedSearches(searches);
-
-    alert("Search Saved!");
-
-  };
+    }
+  );
+  const suggestions = [
+  ...new Set([
+    ...influencers.map(
+      (i) =>
+        `${i.category} Influencers in ${i.city}`
+    ),
+    ...influencers.map(
+      (i) => i.city
+    ),
+    ...influencers.map(
+      (i) => i.category
+    ),
+  ]),
+]
+.filter((item) =>
+  item
+    .toLowerCase()
+    .includes(search.toLowerCase())
+)
+.slice(0, 5);
 
   if (loading) {
 
@@ -238,172 +238,52 @@ fetchCampaigns();
       <h1 className="text-5xl font-bold mb-10">
         Brand Influencer Discovery
       </h1>
+     
+       <div className="relative">
 
-      {/* FILTERS */}
+  <input
+    type="text"
+    placeholder="Search by name, city, category or bio..."
+    value={search}
+    onChange={(e) =>
+      setSearch(e.target.value)
+    }
+    className="w-full border border-gray-300 rounded-2xl px-6 py-4 outline-none focus:border-black"
+  />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+  {search && suggestions.length > 0 && (
 
-        <input
-          type="text"
-          placeholder="Search Influencers"
-          value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-          className="border rounded-xl p-3 flex-1"
-        />
+    <div className="absolute w-full bg-white border rounded-2xl shadow-lg mt-2 z-50">
 
-        <select
-          value={category}
-          onChange={(e) =>
-            setCategory(e.target.value)
-          }
-          className="border rounded-xl p-3"
-        >
-          <option value="All">
-            All Categories
-          </option>
+      {suggestions.map(
+        (item, index) => (
 
-          <option value="Food">
-            Food
-          </option>
+          <button
+            key={index}
+            onClick={() =>
+              setSearch(item)
+            }
+            className="w-full text-left px-4 py-3 hover:bg-gray-100"
+          >
+            {item}
+          </button>
 
-          <option value="Fashion">
-            Fashion
-          </option>
-
-          <option value="Tech">
-            Tech
-          </option>
-
-          <option value="Lifestyle">
-            Lifestyle
-          </option>
-        </select>
-
-        <select
-          value={followersFilter}
-          onChange={(e) =>
-            setFollowersFilter(
-              e.target.value
-            )
-          }
-          className="border rounded-xl p-3"
-        >
-          <option value="All">
-            All Followers
-          </option>
-
-          <option value="0-10000">
-            0 - 10K
-          </option>
-
-          <option value="10000-50000">
-            10K - 50K
-          </option>
-
-          <option value="50000-100000">
-            50K - 100K
-          </option>
-
-          <option value="100000+">
-            100K+
-          </option>
-        </select>
-
-        <select
-          value={cityFilter}
-          onChange={(e) =>
-            setCityFilter(
-              e.target.value
-            )
-          }
-          className="border rounded-xl p-3"
-        >
-          <option value="All">
-            All Cities
-          </option>
-
-          <option value="Ahmedabad">
-            Ahmedabad
-          </option>
-
-          <option value="Surat">
-            Surat
-          </option>
-
-          <option value="Mumbai">
-            Mumbai
-          </option>
-
-          <option value="Delhi">
-            Delhi
-          </option>
-        </select>
-
-        <button
-          onClick={saveCurrentSearch}
-          className="bg-black text-white px-6 rounded-xl"
-        >
-          Save Search
-        </button>
-
-      </div>
-
-      {/* SAVED SEARCHES */}
-
-      {savedSearches.length > 0 && (
-
-        <div className="mb-10">
-
-          <h2 className="text-2xl font-bold mb-4">
-            Saved Searches
-          </h2>
-
-          <div className="flex flex-wrap gap-3">
-
-            {savedSearches.map(
-              (item, index) => (
-
-                <button
-                  key={index}
-                  onClick={() => {
-
-                    setSearch(
-                      item.search
-                    );
-
-                    setCategory(
-                      item.category
-                    );
-
-                    setFollowersFilter(
-                      item.followersFilter ||
-                      "All"
-                    );
-
-                    setCityFilter(
-                      item.cityFilter ||
-                      "All"
-                    );
-
-                  }}
-                  className="border px-4 py-2 rounded-xl hover:bg-black hover:text-white"
-                >
-                  {item.search || "All"} •{" "}
-                  {item.category}
-                </button>
-
-              )
-            )}
-
-          </div>
-
-        </div>
-
+        )
       )}
 
-      {/* INFLUENCERS */}
+    </div>
+
+  )}
+
+</div>
+
+      <p className="text-gray-500 mb-8">
+        {filteredInfluencers.length} influencers found
+      </p>
+
+     
+
+        {/* INFLUENCERS */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
@@ -453,6 +333,22 @@ fetchCampaigns();
 
           )
         )}
+
+      {filteredInfluencers.length === 0 && (
+
+        <div className="text-center py-20">
+
+          <h2 className="text-3xl font-bold mb-3">
+            No Influencers Found
+          </h2>
+
+          <p className="text-gray-500">
+            Try searching with a different keyword.
+          </p>
+
+        </div>
+
+      )}
 
       </div>
 

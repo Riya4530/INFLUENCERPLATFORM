@@ -11,62 +11,101 @@ export default function InvoicesPage() {
     useState(true);
 
   const fetchInvoices =
-    async () => {
+  async () => {
 
-      try {
+    try {
 
-        const response =
-          await fetch(
-            "http://localhost:5000/api/invoices"
-          );
+      console.log(
+        "Fetching invoices..."
+      );
 
-        const data =
-          await response.json();
-
-        setInvoices(
-          data.invoices || []
+      const user =
+        JSON.parse(
+          localStorage.getItem(
+            "user"
+          ) || "{}"
         );
 
-      } catch (error) {
+      const response =
+        await fetch(
+          `http://localhost:5000/api/invoices/${user.email}`
+        );
 
-        console.log(error);
+      const data =
+        await response.json();
 
-      } finally {
+      console.log(data);
 
-        setLoading(false);
+      setInvoices(
+        data.invoices || []
+      );
 
-      }
+    } catch (error) {
 
-    };
+      console.log(error);
 
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
   useEffect(() => {
 
     fetchInvoices();
 
   }, []);
 
-  const markPaid =
-    async (id: string) => {
+const markPaid =
+  async (id: string) => {
 
-      try {
+    try {
 
-        await fetch(
-          `http://localhost:5000/api/invoices/${id}/pay`,
-          {
-            method: "PUT",
-          }
-        );
+      await fetch(
+        `http://localhost:5000/api/invoices/${id}/pay`,
+        {
+          method: "PUT",
+        }
+      );
 
-        fetchInvoices();
+      fetchInvoices();
 
-      } catch (error) {
+    } catch (error) {
 
-        console.log(error);
+      console.log(error);
 
-      }
+    }
 
-    };
+  };
+  const deleteInvoice =
+  async (id: string) => {
 
+    const confirmDelete =
+      confirm(
+        "Delete this invoice?"
+      );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await fetch(
+        `http://localhost:5000/api/invoices/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      fetchInvoices();
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  };
   if (loading) {
 
     return (
@@ -168,23 +207,32 @@ export default function InvoicesPage() {
 
                 </td>
 
-                <td className="p-4">
+             <td className="p-4 flex gap-2">
 
-                  {invoice.status !== "Paid" && (
+  {invoice.status !== "Paid" && (
 
-                    <button
-                      onClick={() =>
-                        markPaid(invoice.id)
-                      }
-                      className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700"
-                    >
-                      Mark Paid
-                    </button>
+    <button
+      onClick={() =>
+        markPaid(invoice.id)
+      }
+      className="bg-green-600 text-white px-4 py-2 rounded-xl"
+    >
+      Mark Paid
+    </button>
 
-                  )}
+  )}
 
-                </td>
+  <button
+    onClick={() =>
+      deleteInvoice(invoice.id)
+    }
+    className="bg-red-600 text-white px-4 py-2 rounded-xl"
+  >
+    Delete
+  </button>
 
+</td>
+                
               </tr>
 
             ))}

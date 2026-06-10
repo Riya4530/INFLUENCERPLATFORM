@@ -559,7 +559,6 @@ app.get(
         FROM influencer_profiles
         WHERE LOWER(city) = LOWER($1)
         AND LOWER(category) = LOWER($2)
-        ORDER BY name ASC
         `,
         [city, category]
       );
@@ -575,7 +574,7 @@ app.get(
 
       res.status(500).json({
         success: false,
-        message: "Something went wrong",
+        influencers: [],
       });
 
     }
@@ -1472,7 +1471,442 @@ app.post(
 
   }
 );
+app.post(
+"/api/campaigns/:id/generate-invoice",
+async (req, res) => {
 
+try {
+
+  const { id } = req.params;
+
+  const campaignResult =
+    await pool.query(
+      `
+      SELECT *
+      FROM campaigns
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+  if (
+    campaignResult.rows.length === 0
+  ) {
+
+    return res.status(404).json({
+      success: false,
+      message: "Campaign not found",
+    });
+
+  }
+
+  const campaign =
+    campaignResult.rows[0];
+
+  const requestResult =
+    await pool.query(
+      `
+      SELECT *
+      FROM requests
+      WHERE campaign_id = $1
+      AND status = 'Accepted'
+      LIMIT 1
+      `,
+      [id]
+    );
+
+  if (
+    requestResult.rows.length === 0
+  ) {
+
+    return res.status(404).json({
+      success: false,
+      message:
+        "No accepted influencer found",
+    });
+
+  }
+
+  const request =
+    requestResult.rows[0];
+
+  const brandResult =
+    await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE id = $1
+      `,
+      [request.brand_id]
+    );
+
+  const influencerResult =
+    await pool.query(
+      `
+      SELECT *
+      FROM influencer_profiles
+      WHERE id = $1
+      `,
+      [request.influencer_id]
+    );
+
+  const brand =
+    brandResult.rows[0];
+
+  const influencer =
+    influencerResult.rows[0];
+
+  const amount =
+    Number(
+      request.quotation_amount || 0
+    );
+
+  const gst =
+    amount * 0.18;
+
+  const total =
+    amount + gst;
+
+  const insertResult = await pool.query(
+  `
+  INSERT INTO invoices
+  (
+    influencer_email,
+    client_name,
+    campaign_name,
+    amount,
+    gst,
+    total,
+    status
+  )
+  VALUES
+  ($1,$2,$3,$4,$5,$6,$7)
+  RETURNING *
+  `,
+  [
+    influencer.user_email,
+    brand.name,
+    campaign.title,
+    amount,
+    gst,
+    total,
+    "Pending",
+  ]
+);
+
+res.json({
+  success: true,
+  message: "Invoice generated successfully",
+  invoice: insertResult.rows[0],
+});
+
+
+} catch (error) {
+
+  console.log(error);
+
+  res.status(500).json({
+    success: false,
+    message: "Something went wrong",
+  });
+
+}
+
+}
+);
+
+
+app.post("/api/campaigns/:id/generate-invoice", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Get campaign
+    const campaignResult = await pool.query(
+      `
+      SELECT *
+      FROM campaigns
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    if (campaignResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found",
+      });
+    }
+
+    const campaign = campaignResult.rows[0];
+
+    // 2. Get accepted request
+    const requestResult = await pool.query(
+      `
+      SELECT *
+      FROM requests
+      WHERE campaign_id = $1
+      AND status = 'Accepted'
+      LIMIT 1
+      `,
+      [id]
+    );
+
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No accepted influencer found",
+      });
+    }
+
+    const request = requestResult.rows[0];
+
+    console.log("REQUEST:", request);
+
+    // 3. Get brand
+    const brandResult = await pool.query(
+      `
+      SELECT *
+      FROM users
+      WHERE id = $1
+      `,
+      [request.brand_id]
+    );
+
+    const brand = brandResult.rows[0];
+
+    // 4. Get influencer
+    const influencerResult = await pool.query(
+      `
+      SELECT *
+      FROM influencer_profiles
+      WHERE id = $1
+      `,
+      [request.influencer_id]
+    );
+
+    const influencer = influencerResult.rows[0];
+
+    console.log("BRAND:", brand);
+    console.log("INFLUENCER:", influencer);
+    console.log("CAMPAIGN:", campaign);
+
+    // 5. HARD VALIDATION (THIS PREVENTS SILENT FAILURES)
+    if (!brand || !influencer || !campaign) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing data for invoice generation",
+        debug: {
+          brand,
+          influencer,
+          campaign,
+        },
+      });
+    }
+
+    // 6. Calculate amount
+    const amount = Number(request.quotation_amount || 0);
+    const gst = amount * 0.18;
+    const total = amount + gst;
+
+    // 7. Insert invoice
+    const insertResult = await pool.query(
+      `
+      INSERT INTO invoices
+      (
+        influencer_email,
+        client_name,
+        campaign_name,
+        amount,
+        gst,
+        total,
+        status
+      )
+      VALUES
+      ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING *
+      `,
+      [
+        influencer.user_email || influencer.email,
+        brand.name,
+        campaign.title,
+        amount,
+        gst,
+        total,
+        "Pending",
+      ]
+    );
+
+    console.log("INVOICE CREATED:", insertResult.rows[0]);
+
+    // 8. Response
+    return res.json({
+      success: true,
+      message: "Invoice generated successfully",
+      invoice: insertResult.rows[0],
+    });
+
+  } catch (error) {
+    console.log("INVOICE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+});
+app.get(
+  "/api/campaigns",
+  async (req, res) => {
+
+    try {
+
+      const campaigns =
+        await pool.query(
+          `
+          SELECT *
+          FROM campaigns
+          ORDER BY id DESC
+          `
+        );
+
+      res.json({
+        success: true,
+        campaigns:
+          campaigns.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+app.put(
+  "/api/campaigns/:id/complete",
+  async (req, res) => {
+
+    try {
+
+      const { id } = req.params;
+
+      await pool.query(
+        `
+        UPDATE campaigns
+        SET status = 'Completed'
+        WHERE id = $1
+        `,
+        [id]
+      );
+
+      res.json({
+        success: true,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+app.put(
+"/api/requests/:id/complete",
+async (req, res) => {
+
+
+try {
+
+  const { id } = req.params;
+
+  await pool.query(
+    `
+    UPDATE requests
+    SET deal_status = 'Completed'
+    WHERE id = $1
+    `,
+    [id]
+  );
+
+  res.json({
+    success: true,
+    message: "Campaign completed",
+  });
+
+} catch (error) {
+
+  console.log(error);
+
+  res.status(500).json({
+    success: false,
+  });
+
+}
+
+
+}
+);
+
+app.put(
+  "/api/invoices/:id/pay",
+  async (req, res) => {
+
+    const { id } = req.params;
+
+    const result =
+      await pool.query(
+        `
+        UPDATE invoices
+        SET status = 'Paid'
+        WHERE id = $1
+        RETURNING *
+        `,
+        [id]
+      );
+
+    console.log(result.rows);
+
+    res.json({
+      success: true
+    });
+
+  }
+);
+app.delete(
+  "/api/invoices/:id",
+  async (req, res) => {
+
+    const { id } = req.params;
+
+    const result =
+      await pool.query(
+        `
+        DELETE FROM invoices
+        WHERE id = $1
+        RETURNING *
+        `,
+        [id]
+      );
+
+    console.log(result.rows);
+
+    res.json({
+      success: true
+    });
+
+  }
+);
 
 /* =========================
    GET BRAND CAMPAIGNS
@@ -1517,6 +1951,40 @@ app.get(
   }
 );
 
+app.get("/api/search-data", async (req, res) => {
+
+  try {
+
+    const cities = await pool.query(`
+      SELECT DISTINCT city
+      FROM influencer_profiles
+      WHERE city IS NOT NULL
+    `);
+
+    const categories = await pool.query(`
+      SELECT DISTINCT category
+      FROM influencer_profiles
+      WHERE category IS NOT NULL
+    `);
+
+    res.json({
+      success: true,
+      cities: cities.rows,
+      categories: categories.rows,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+
+});
 /* =========================
    ADMIN MANAGE USERS
 ========================= */

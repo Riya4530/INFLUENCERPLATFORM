@@ -3,93 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
+import SearchBar from "./SearchBar";
 export default function HeroSection() {
 
 const router = useRouter();
 
-const [search, setSearch] =
-useState("");
 
-const handleSearch = async () => {
-
-console.log("Searching:", search);
-try {
-
-  const response = await fetch(
-    "http://localhost:5000/api/search-data"
-  );
-
-  const data = await response.json();
-
-  const cities =
-    data.cities.map(
-      (item: any) =>
-        item.city.toLowerCase()
-    );
-
-  const categories =
-    data.categories.map(
-      (item: any) =>
-        item.category.toLowerCase()
-    );
-
-  const text =
-    search.toLowerCase();
-
-  let foundCity = "";
-  let foundCategory = "";
-
-  cities.forEach((city: string) => {
-
-    if (
-      text.includes(city)
-    ) {
-      foundCity = city;
-    }
-
-  });
-
-  categories.forEach(
-    (category: string) => {
-
-      if (
-        text.includes(category)
-      ) {
-        foundCategory =
-          category;
-      }
-
-    }
-  );
-
-  if (
-    !foundCity ||
-    !foundCategory
-  ) {
-
-    alert(
-      "Try: Food Influencers in Mumbai"
-    );
-
-    return;
-
-  }
-
-  router.push(
-    `/discover/${foundCity}/${foundCategory}`
-  );
-
-} catch (error) {
-
-  console.log(error);
-
-  alert(
-    "Search failed"
-  );
-
-}
-};
 
 return ( <section className="bg-gradient-to-b from-gray-50 to-white px-6 py-28">
 
@@ -112,28 +31,7 @@ return ( <section className="bg-gradient-to-b from-gray-50 to-white px-6 py-28">
       collaborations, and audience growth.
     </p>
 
-    <div className="max-w-3xl mx-auto flex gap-3 mb-10">
-
-      <input
-        type="text"
-        value={search}
-        onChange={(e) =>
-          setSearch(
-            e.target.value
-          )
-        }
-        placeholder="Food Influencers in Mumbai"
-        className="flex-1 border border-gray-300 rounded-2xl px-6 py-4 outline-none focus:border-black"
-      />
-
-      <button
-        onClick={handleSearch}
-        className="bg-black text-white px-8 rounded-2xl font-semibold"
-      >
-        Search
-      </button>
-
-    </div>
+    <SearchBar /><br/><br/>
 
     <div className="flex justify-center gap-4 flex-wrap">
 

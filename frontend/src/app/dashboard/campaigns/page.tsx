@@ -60,28 +60,26 @@ fetchCampaigns();
 }, []);
 
 const markCompleted =
-async (id: number) => {
+  async (id: number) => {
 
+    try {
 
-  try {
+      await fetch(
+        `http://localhost:5000/api/requests/${id}/complete`,
+        {
+          method: "PUT",
+        }
+      );
 
-    await fetch(
-      `http://localhost:5000/api/campaigns/${id}/complete`,
-      {
-        method: "PUT",
-      }
-    );
+      fetchCampaigns();
 
-    fetchCampaigns();
+    } catch (error) {
 
-  } catch (error) {
+      console.log(error);
 
-    console.log(error);
+    }
 
-  }
-
-};
-
+  };
 
 const generateInvoice =
 async (id: number) => {
@@ -136,9 +134,9 @@ return (
 
             <div>
 
-              <h2 className="text-2xl font-bold">
-                Campaign #{campaign.id}
-              </h2>
+          <h2 className="text-2xl font-bold">
+  {campaign.title}
+</h2>
 
               <p className="text-gray-500 mt-2">
                 Brand ID: {campaign.brand_id}
@@ -150,49 +148,67 @@ return (
 
             </div>
 
-            <span
-              className={`px-4 py-2 rounded-full ${
-                campaign.deal_status === "Completed"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-green-100 text-green-700"
-              }`}
-            >
-              {campaign.deal_status || "Active"}
-            </span>
+            <div className="flex flex-col items-end gap-3">
 
-          </div>
+<span
+className={`px-4 py-2 rounded-full ${
+      campaign.deal_status === "Completed"
+        ? "bg-blue-100 text-blue-700"
+        : "bg-green-100 text-green-700"
+    }`}
 
-          <div className="flex gap-4 mt-6">
+>
 
-            {campaign.deal_status !== "Completed" && (
+```
+{campaign.deal_status || "Pending"}
+```
 
-              <button
-                onClick={() =>
-                  markCompleted(
-                    campaign.id
-                  )
-                }
-                className="bg-black text-white px-6 py-3 rounded-xl"
-              >
-                Mark Completed
-              </button>
+  </span>
 
-            )}
+{!campaign.quotation_amount && ( <p className="text-red-500 text-sm">
+Send quotation before campaign can start. </p>
+)}
 
-            {campaign.deal_status === "Completed" && (
+{campaign.quotation_amount &&
+campaign.status !== "Accepted" && ( <p className="text-yellow-500 text-sm">
+Waiting for brand approval. </p>
+)}
 
-              <button
-                onClick={() =>
-                  generateInvoice(
-                    campaign.id
-                  )
-                }
-                className="bg-green-600 text-white px-6 py-3 rounded-xl"
-              >
-                Generate Invoice
-              </button>
+{campaign.status === "Accepted" &&
+campaign.quotation_amount &&
+campaign.deal_status === "Accepted" && (
 
-            )}
+
+  <button
+    onClick={() =>
+      markCompleted(campaign.id)
+    }
+    className="bg-black text-white px-6 py-3 rounded-xl"
+  >
+    Mark Completed
+  </button>
+
+
+)}
+
+{campaign.deal_status === "Completed" && (
+
+
+<button
+  onClick={() =>
+    generateInvoice(
+      campaign.id
+    )
+  }
+  className="bg-green-600 text-white px-6 py-3 rounded-xl"
+>
+  Generate Invoice
+</button>
+
+
+)}
+
+</div>
 
           </div>
 
