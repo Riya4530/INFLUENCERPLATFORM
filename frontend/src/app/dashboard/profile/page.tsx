@@ -8,6 +8,7 @@ export default function ProfileSettingsPage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<any[]>([]);
   const [city, setCity] = useState("");
   const [followers, setFollowers] = useState("");
   const [instagram, setInstagram] = useState("");
@@ -31,7 +32,22 @@ export default function ProfileSettingsPage() {
 
     setUser(parsedUser);
 
-    fetchProfile(parsedUser.email);
+fetchProfile(parsedUser.email);
+
+
+fetch(
+"http://localhost:5000/api/admin/categories"
+)
+.then((res)=>res.json())
+.then((data)=>{
+
+  if(data.success){
+    setCategories(data.categories);
+  }
+
+})
+.catch((err)=>console.log(err));
+
 
   }, []);
 
@@ -147,44 +163,42 @@ export default function ProfileSettingsPage() {
 
           </div>
 
-          <div>
+         <div>
 
-            <label className="block mb-3 font-semibold">
-              Category
-            </label>
+<label className="block mb-3 font-semibold">
+  Category
+</label>
 
-            <select
-              value={category}
-              onChange={(e) =>
-                setCategory(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
-            >
 
-              <option value="">
-                Select Category
-              </option>
+<select
+  value={category}
+  onChange={(e) =>
+    setCategory(e.target.value)
+  }
+  className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+>
 
-              <option value="Fashion">
-                Fashion
-              </option>
 
-              <option value="Food">
-                Food
-              </option>
+<option value="">
+  Select Category
+</option>
 
-              <option value="Tech">
-                Tech
-              </option>
 
-              <option value="Lifestyle">
-                Lifestyle
-              </option>
+{categories.map((cat)=>(
 
-            </select>
+<option
+  key={cat.id}
+  value={cat.name}
+>
+  {cat.name}
+</option>
 
-          </div>
+))}
 
+
+</select>
+
+</div>
           <div>
 
             <label className="block mb-3 font-semibold">

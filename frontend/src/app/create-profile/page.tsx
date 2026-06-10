@@ -8,6 +8,7 @@ export default function CreateProfilePage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<any[]>([]);
   const [city, setCity] = useState("");
   const [followers, setFollowers] = useState("");
   const [bio, setBio] = useState("");
@@ -33,6 +34,20 @@ const [uploading, setUploading] =
       JSON.parse(storedUser);
 
     setEmail(user.email);
+
+  fetch(
+  "http://localhost:5000/api/admin/categories"
+)
+.then((res)=>res.json())
+.then((data)=>{
+
+  if(data.success){
+    setCategories(data.categories);
+  }
+
+})
+.catch((err)=>console.log(err));
+
 
     fetch(
       `http://localhost:5000/api/profile/${user.email}`
@@ -257,41 +272,42 @@ const handleImageUpload = async (
             />
           </div>
 
-          <div>
-            <label className="block mb-3 font-semibold">
-              Category
-            </label>
+         <div>
 
-            <select
-              value={category}
-              onChange={(e) =>
-                setCategory(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
-              required
-            >
-              <option value="">
-                Select Category
-              </option>
+<label className="block mb-3 font-semibold">
+  Category
+</label>
 
-              <option value="Food">
-                Food
-              </option>
 
-              <option value="Fashion">
-                Fashion
-              </option>
+<select
+  value={category}
+  onChange={(e) =>
+    setCategory(e.target.value)
+  }
+  className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+>
 
-              <option value="Tech">
-                Tech
-              </option>
 
-              <option value="Lifestyle">
-                Lifestyle
-              </option>
+<option value="">
+  Select Category
+</option>
 
-            </select>
-          </div>
+
+{categories.map((cat)=>(
+
+<option
+  key={cat.id}
+  value={cat.name}
+>
+  {cat.name}
+</option>
+
+))}
+
+
+</select>
+
+</div>
 
           <div>
             <label className="block mb-3 font-semibold">

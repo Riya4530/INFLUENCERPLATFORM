@@ -87,10 +87,9 @@ export default function AdminPage() {
       try {
 
         const response =
-          await fetch(
-            "http://localhost:5000/api/contact-messages"
-          );
-
+ await fetch(
+ "http://localhost:5000/api/contact"
+ );
         const data =
           await response.json();
 
@@ -189,6 +188,24 @@ export default function AdminPage() {
   Users
 </button>
 
+<button
+  onClick={() =>
+    window.location.href="/admin/categories"
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl font-medium transition-all duration-300 hover:bg-gray-800"
+>
+  Categories
+</button>
+
+<button
+  onClick={() =>
+    window.location.href="/admin/analytics"
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl font-medium transition-all duration-300 hover:bg-gray-800"
+>
+  Analytics
+</button>
+
             <button
               onClick={() =>
                 setActiveSection("influencers")
@@ -201,6 +218,7 @@ export default function AdminPage() {
             >
               Influencers
             </button>
+
 
             <button
               onClick={() =>

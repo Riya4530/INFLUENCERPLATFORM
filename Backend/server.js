@@ -4,7 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const cloudinary = require("./cloudinary");
 require("dotenv").config();
-const { Pool, Client } = require("pg");
+const { Pool } = require("pg");
 
 const app = express();
 
@@ -45,24 +45,13 @@ async function broadcastInfluencers() {
   }
 }
 
-pool.connect((err) => {
-
-  if (err) {
-
-    console.log(
-      "Database connection error",
-      err
-    );
-
-  } else {
-
-    console.log(
-      "PostgreSQL connected successfully"
-    );
-
-  }
-
-});
+pool.query("SELECT 1")
+  .then(() => {
+    console.log("PostgreSQL connected successfully");
+  })
+  .catch((err) => {
+    console.log("Database connection error", err);
+  });
 
 
 
@@ -230,14 +219,6 @@ app.put("/api/forgot-password", async (req, res) => {
   try {
 
     const { email, newPassword } = req.body;
-    if (newPassword.length < 4) {
-  return res.status(400).json({
-    success: false,
-    message:
-      "Password must be at least 4 characters",
-  });
-}
-
 
     const userCheck = await pool.query(
       `
@@ -256,7 +237,7 @@ app.put("/api/forgot-password", async (req, res) => {
       });
 
     }
-    
+
     const hashedPassword =
       await bcrypt.hash(newPassword, 10);
 
@@ -398,218 +379,7 @@ app.post("/api/upload-image", async (req, res) => {
 
 });
 
-/* =========================
-   CREATE INVOICE
-========================= */
 
-app.post(
-  "/api/invoices",
-  async (req, res) => {
-
-    try {
-
-      const {
-        influencer_email,
-        client_name,
-        campaign_name,
-        amount,
-      } = req.body;
-
-      const gst =
-        Number(amount) * 0.18;
-
-      const total =
-        Number(amount) + gst;
-
-      const result =
-        await pool.query(
-          `
-          INSERT INTO invoices
-          (
-            influencer_email,
-            client_name,
-            campaign_name,
-            amount,
-            gst,
-            total
-          )
-          VALUES
-          ($1,$2,$3,$4,$5,$6)
-          RETURNING *
-          `,
-          [
-            influencer_email,
-            client_name,
-            campaign_name,
-            amount,
-            gst,
-            total,
-          ]
-        );
-
-      res.json({
-        success: true,
-        invoice: result.rows[0],
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message: "Failed to create invoice",
-      });
-
-    }
-
-  }
-);
-app.get("/api/invoices", async (req, res) => {
-
-  try {
-
-    const result = await pool.query(`
-      SELECT *
-      FROM invoices
-      ORDER BY created_at DESC
-    `);
-
-    res.json({
-      success: true,
-      invoices: result.rows,
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-    });
-
-  }
-
-});
-app.put(
-  "/api/invoices/:id/pay",
-  async (req, res) => {
-
-    try {
-
-      const { id } = req.params;
-
-      await pool.query(
-        `
-        UPDATE invoices
-        SET status = 'Paid'
-        WHERE id = $1
-        `,
-        [id]
-      );
-
-      res.json({
-        success: true,
-        message: "Invoice marked as paid",
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
-  }
-);
-app.post(
-  "/api/campaigns/:id/generate-invoice",
-  async (req, res) => {
-
-    try {
-
-      const { id } = req.params;
-
-      const campaign =
-        await pool.query(
-          `
-          SELECT *
-          FROM campaigns
-          WHERE id = $1
-          `,
-          [id]
-        );
-
-      if (
-        campaign.rows.length === 0
-      ) {
-
-        return res.status(404).json({
-          success: false,
-          message: "Campaign not found",
-        });
-
-      }
-
-      const item =
-        campaign.rows[0];
-
-      const amount =
-        Number(item.budget);
-
-      const gst =
-        amount * 0.18;
-
-      const total =
-        amount + gst;
-
-      await pool.query(
-        `
-        INSERT INTO invoices
-        (
-          influencer_email,
-          client_name,
-          campaign_name,
-          amount,
-          gst,
-          total,
-          status
-        )
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7)
-        `,
-        [
-          item.assigned_influencer_email,
-          "Brand",
-          item.title,
-          amount,
-          gst,
-          total,
-          "Pending",
-        ]
-      );
-
-      res.json({
-        success: true,
-        message:
-          "Invoice generated successfully",
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
-  }
-);
 /* =========================
    GET ALL INFLUENCERS
 ========================= */
@@ -645,7 +415,6 @@ app.get("/api/influencers", async (req, res) => {
     });
   }
 });
-
 
 /* =========================
    INFLUENCERS SSE STREAM
@@ -1403,12 +1172,7 @@ app.post(
         subject,
         message,
       } = req.body;
-if (!message || message.length > 500) {
-  return res.status(400).json({
-    success: false,
-    message: "Message cannot exceed 500 characters",
-  });
-}
+
       await pool.query(
         `
         INSERT INTO contact_messages
@@ -1450,6 +1214,40 @@ if (!message || message.length > 500) {
 
 
 
+app.get(
+  "/api/contact",
+  async (req, res) => {
+
+    try {
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM contact_messages
+        ORDER BY id ASC
+        `
+      );
+
+
+      res.json({
+        success: true,
+        messages: result.rows,
+      });
+
+
+    } catch(error){
+
+      console.log(error);
+
+      res.status(500).json({
+        success:false,
+        message:"Something went wrong"
+      });
+
+    }
+
+  }
+);
 
 
 app.post("/api/requests", async (req, res) => {
@@ -1527,24 +1325,6 @@ app.put(
 
   }
 );
-app.put("/api/requests/:id/complete", async (req, res) => {
-
-  const { id } = req.params;
-
-  console.log("COMPLETING REQUEST ID:", id); // DEBUG
-
-  await pool.query(
-    `
-    UPDATE requests
-    SET deal_status = 'Completed'
-    WHERE id = $1
-    `,
-    [id]
-  );
-
-  res.json({ success: true });
-
-});
 
 app.post("/api/brands/signup", async (req, res) => {
   try {
@@ -1692,72 +1472,7 @@ app.post(
 
   }
 );
-app.get(
-  "/api/campaigns",
-  async (req, res) => {
 
-    try {
-
-      const campaigns =
-        await pool.query(
-          `
-          SELECT *
-          FROM campaigns
-          ORDER BY id DESC
-          `
-        );
-
-      res.json({
-        success: true,
-        campaigns:
-          campaigns.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
-  }
-);
-app.put(
-  "/api/campaigns/:id/complete",
-  async (req, res) => {
-
-    try {
-
-      const { id } = req.params;
-
-      await pool.query(
-        `
-        UPDATE campaigns
-        SET status = 'Completed'
-        WHERE id = $1
-        `,
-        [id]
-      );
-
-      res.json({
-        success: true,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
-  }
-);
 
 /* =========================
    GET BRAND CAMPAIGNS
@@ -1801,40 +1516,6 @@ app.get(
 
   }
 );
-app.get("/api/search-data", async (req, res) => {
-
-  try {
-
-    const cities = await pool.query(`
-      SELECT DISTINCT city
-      FROM influencer_profiles
-      WHERE city IS NOT NULL
-    `);
-
-    const categories = await pool.query(`
-      SELECT DISTINCT category
-      FROM influencer_profiles
-      WHERE category IS NOT NULL
-    `);
-
-    res.json({
-      success: true,
-      cities: cities.rows,
-      categories: categories.rows,
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-
-  }
-
-});
 
 /* =========================
    ADMIN MANAGE USERS
@@ -2055,6 +1736,172 @@ success:false
 
 });
 
+app.get("/api/admin/categories", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM categories ORDER BY id ASC`
+    );
+
+    res.json({
+      success: true,
+      categories: result.rows,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+app.post("/api/admin/categories", async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name required",
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO categories(name)
+       VALUES($1)
+       RETURNING *`,
+      [name]
+    );
+
+    res.json({
+      success: true,
+      category: result.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+app.delete("/api/admin/categories/:id", async (req,res)=>{
+
+try{
+
+const {id}=req.params;
+
+
+await pool.query(
+`DELETE FROM categories WHERE id=$1`,
+[id]
+);
+
+
+res.json({
+success:true,
+message:"Category deleted"
+});
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+success:false
+});
+
+}
+
+});
+
+app.get("/api/admin/analytics", async(req,res)=>{
+
+try{
+
+
+const users =
+await pool.query(
+"SELECT COUNT(*) FROM users"
+);
+
+
+const influencers =
+await pool.query(
+"SELECT COUNT(*) FROM influencer_profiles"
+);
+
+
+const categories =
+await pool.query(
+"SELECT COUNT(*) FROM categories"
+);
+
+
+
+const verified =
+await pool.query(
+`
+SELECT COUNT(*)
+FROM influencer_profiles
+WHERE verification_status='Verified'
+`
+);
+
+
+
+const pending =
+await pool.query(
+`
+SELECT COUNT(*)
+FROM influencer_profiles
+WHERE verification_status='Pending'
+`
+);
+
+
+
+res.json({
+
+success:true,
+
+analytics:{
+
+users:
+Number(users.rows[0].count),
+
+influencers:
+Number(influencers.rows[0].count),
+
+categories:
+Number(categories.rows[0].count),
+
+verified:
+Number(verified.rows[0].count),
+
+pending:
+Number(pending.rows[0].count)
+
+}
+
+});
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+success:false
+});
+
+}
+
+
+});
+
 
 /* =========================
    SERVER START
@@ -2071,20 +1918,42 @@ app.listen(PORT, () => {
 });
 
 // Setup a dedicated listener client for Postgres LISTEN/NOTIFY
-const listenerClient = new Client({ connectionString: process.env.DATABASE_URL });
-listenerClient.connect()
-  .then(() => {
-    listenerClient.query('LISTEN influencers_channel');
-    listenerClient.on('notification', async (msg) => {
-      // When notification received, broadcast updated influencers to SSE clients
-      try {
+let listenerClient;
+
+async function setupListener(){
+
+  try {
+
+    listenerClient = await pool.connect();
+
+    await listenerClient.query(
+      "LISTEN influencers_channel"
+    );
+
+    listenerClient.on(
+      "notification",
+      () => {
+
         broadcastInfluencers();
-      } catch (e) {
-        console.log('Error handling notification', e);
+
       }
-    });
-    console.log('LISTEN setup on influencers_channel');
-  })
-  .catch((err) => {
-    console.log('Error setting up listener client', err);
-  });
+    );
+
+    console.log(
+      "LISTEN setup on influencers_channel"
+    );
+
+
+  } catch(error){
+
+    console.log(
+      "Listener error",
+      error
+    );
+
+  }
+
+}
+
+
+setupListener();
