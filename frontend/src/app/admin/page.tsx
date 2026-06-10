@@ -171,6 +171,25 @@ export default function AdminPage() {
             </button>
 
             <button
+  onClick={() =>
+    window.location.href =
+    "/admin/verification"
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl font-medium transition-all duration-300 hover:bg-gray-800"
+>
+  Verification
+</button>
+
+<button
+  onClick={() =>
+    window.location.href="/admin/users"
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl font-medium transition-all duration-300 hover:bg-gray-800"
+>
+  Users
+</button>
+
+            <button
               onClick={() =>
                 setActiveSection("influencers")
               }

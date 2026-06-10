@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 export default function BrandDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+const [campaignCount, setCampaignCount] = useState(0);
+const [totalSpend, setTotalSpend] = useState(0);
+const [connectedInfluencers, setConnectedInfluencers] = useState(0);
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -23,7 +27,59 @@ export default function BrandDashboard() {
     }
 
     setUser(parsed);
+    fetchCampaigns(parsed.id);
   }, [router]);
+
+  const fetchCampaigns = async (
+  brandId: string
+) => {
+  try {
+
+    const response = await fetch(
+      `http://localhost:5000/api/campaigns/${brandId}`
+    );
+
+    const data =
+      await response.json();
+
+    const campaigns =
+      data.campaigns || [];
+
+    setCampaignCount(
+      campaigns.length
+    );
+
+    const spend = campaigns.reduce(
+  (sum: number, campaign: any) =>
+    sum + Number(campaign.budget || 0),
+  0
+);
+
+setTotalSpend(spend);
+
+const requestsResponse = await fetch(
+  `http://localhost:5000/api/brand-requests/${brandId}`
+);
+
+const requestsData =
+  await requestsResponse.json();
+
+const acceptedRequests =
+  (requestsData.requests || []).filter(
+    (request: any) =>
+      request.status === "Accepted"
+  );
+
+setConnectedInfluencers(
+  acceptedRequests.length
+);
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+};
 
   if (!user) {
     return (
@@ -55,25 +111,28 @@ export default function BrandDashboard() {
         <div className="grid md:grid-cols-3 gap-6 mb-10">
 
           <div className="bg-white p-8 rounded-3xl shadow-sm">
-            <h2 className="text-4xl font-bold">3</h2>
+        <h2 className="text-4xl font-bold">
+  {campaignCount}
+</h2>
+
             <p className="text-gray-500 mt-2">
               Active Campaigns
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm">
-            <h2 className="text-4xl font-bold">
-              ₹1,20,000
-            </h2>
+           <h2 className="text-4xl font-bold">
+  ₹{totalSpend.toLocaleString()}
+</h2>
             <p className="text-gray-500 mt-2">
               Total Spend
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm">
-            <h2 className="text-4xl font-bold">
-              12
-            </h2>
+           <h2 className="text-4xl font-bold">
+  {connectedInfluencers}
+</h2>
             <p className="text-gray-500 mt-2">
               Influencers Connected
             </p>
@@ -82,59 +141,9 @@ export default function BrandDashboard() {
         </div>
 
         {/* ACTION CARDS */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      
 
-          <a
-            href="/influencers"
-            className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-bold mb-3">
-              Discover Influencers
-            </h2>
-
-            <p className="text-gray-500">
-              Search and connect with creators.
-            </p>
-          </a>
-
-          <a
-            href="/dashboard/campaigns/create"
-            className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-bold mb-3">
-              Create Campaign
-            </h2>
-
-            <p className="text-gray-500">
-              Launch a new influencer campaign.
-            </p>
-          </a>
-
-          <a
-            href="/dashboard/messages"
-            className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-bold mb-3">
-              Messages
-            </h2>
-
-            <p className="text-gray-500">
-              Chat with influencers.
-            </p>
-          </a>
-
-          <a
-            href="/dashboard/bookings"
-            className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-bold mb-3">
-              Collaboration Requests
-            </h2>
-
-            <p className="text-gray-500">
-              Manage quotes and requests.
-            </p>
-          </a>
+<div className="grid md:grid-cols-2 gap-6">
 
 <a
   href="/brand/favourites"

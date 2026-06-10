@@ -8,6 +8,8 @@ export default function DashboardPage() {
   const [profileId, setProfileId] = useState<number | null>(null);
   const [hasProfile, setHasProfile] = useState(false);
 const [completion, setCompletion] = useState(0);
+const [brandRequests, setBrandRequests] = useState(0);
+const [activeCampaigns, setActiveCampaigns] = useState(0);
 
 
   useEffect(() => {
@@ -37,6 +39,7 @@ const [completion, setCompletion] = useState(0);
   setHasProfile(true);
 
   const profile = data.profile;
+  fetchDashboardStats(profile.id);
 
   setProfileId(profile.id);
 
@@ -68,6 +71,43 @@ const [completion, setCompletion] = useState(0);
       window.location.href = "/login";
     }
   }, []);
+
+  const fetchDashboardStats = async (
+  influencerId: number
+) => {
+  try {
+
+    const response = await fetch(
+      `http://localhost:5000/api/invitations/${influencerId}`
+    );
+
+    const data =
+      await response.json();
+
+    const requests =
+      data.invitations || [];
+
+    setBrandRequests(
+      requests.length
+    );
+
+    const accepted =
+      requests.filter(
+        (request: any) =>
+          request.status === "Accepted"
+      );
+
+    setActiveCampaigns(
+      accepted.length
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -169,8 +209,8 @@ const [completion, setCompletion] = useState(0);
           <div className="bg-pink-600 text-white rounded-3xl p-8 shadow-lg">
 
             <h2 className="text-5xl font-bold mb-3">
-              45
-            </h2>
+  {brandRequests}
+</h2>
 
             <p className="text-pink-100 text-lg">
               Brand Requests
@@ -181,8 +221,8 @@ const [completion, setCompletion] = useState(0);
           <div className="bg-blue-600 text-white rounded-3xl p-8 shadow-lg">
 
             <h2 className="text-5xl font-bold mb-3">
-              8
-            </h2>
+  {activeCampaigns}
+</h2>
 
             <p className="text-blue-100 text-lg">
               Active Campaigns

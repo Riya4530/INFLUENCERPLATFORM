@@ -12,6 +12,7 @@ type InfluencerCardProps = {
   instagram?: string;
   city?: string;
   image?: string;
+   verification_status?: string;
 };
 
 export default function InfluencerCard({
@@ -22,6 +23,7 @@ export default function InfluencerCard({
   instagram,
   city,
   image,
+ verification_status,
 }: InfluencerCardProps) {
   const [saved, setSaved] = useState(false);
 
@@ -104,9 +106,15 @@ const handleFavourite = (
               {name || "No Name"}
             </h3>
 
-            <span className="text-sm bg-black text-white px-3 py-1 rounded-full">
-              Verified
-            </span>
+            {verification_status === "Verified" && (
+
+<span className="text-sm bg-black text-white px-3 py-1 rounded-full">
+
+✓ Verified
+
+</span>
+
+)}
           </div>
 
           <p className="text-gray-600 font-medium">

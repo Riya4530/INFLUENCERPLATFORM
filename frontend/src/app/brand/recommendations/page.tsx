@@ -86,6 +86,7 @@ export default function RecommendationsPage() {
                 city={influencer.city}
                 instagram={influencer.instagram}
                 image={influencer.image}
+                
               />
 
             )

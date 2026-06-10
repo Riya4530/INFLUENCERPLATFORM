@@ -617,10 +617,16 @@ app.post(
 app.get("/api/influencers", async (req, res) => {
   try {
     const profiles = await pool.query(`
-      SELECT *
-      FROM influencer_profiles
-      ORDER BY id DESC
-    `);
+  SELECT
+    influencer_profiles.*
+  FROM influencer_profiles
+  JOIN users
+    ON users.email =
+       influencer_profiles.user_email
+  WHERE users.status = 'Active'
+  AND influencer_profiles.verification_status = 'Verified'
+  ORDER BY influencer_profiles.id DESC
+`);
 
     res.json({
       success: true,
@@ -1444,43 +1450,7 @@ if (!message || message.length > 500) {
 
 
 
-/* =========================
-   GET CONTACT MESSAGES
-========================= */
 
-app.get(
-  "/api/contact-messages",
-  async (req, res) => {
-
-    try {
-
-      const messages =
-        await pool.query(
-          `
-          SELECT *
-          FROM contact_messages
-          ORDER BY id DESC
-          `
-        );
-
-      res.json({
-        success: true,
-        messages: messages.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong",
-      });
-
-    }
-
-  }
-);
 
 app.post("/api/requests", async (req, res) => {
   try {
@@ -1865,6 +1835,226 @@ app.get("/api/search-data", async (req, res) => {
   }
 
 });
+
+/* =========================
+   ADMIN MANAGE USERS
+========================= */
+
+app.get(
+  "/api/admin/users",
+  async(req,res)=>{
+
+    try{
+
+      const result =
+      await pool.query(
+        `
+        SELECT 
+        id,
+        name,
+        email,
+        role,
+        status
+        FROM users
+        ORDER BY id DESC
+        `
+      );
+
+
+      res.json({
+        success:true,
+        users:result.rows
+      });
+
+
+    }catch(error){
+
+      console.log(error);
+
+      res.status(500).json({
+        success:false
+      });
+
+    }
+
+});
+
+app.put(
+  "/api/admin/users/:id",
+  async(req,res)=>{
+
+    try{
+
+      const { id } = req.params;
+
+      const { status } = req.body;
+
+
+      await pool.query(
+        `
+        UPDATE users
+        SET status = $1
+        WHERE id = $2
+        `,
+        [
+          status,
+          id
+        ]
+      );
+
+
+      res.json({
+        success:true,
+        message:"User status updated"
+      });
+
+
+    }catch(error){
+
+      console.log(error);
+
+      res.status(500).json({
+        success:false
+      });
+
+    }
+
+});
+
+/* =========================
+   ADMIN VERIFY INFLUENCERS
+========================= */
+
+
+app.get(
+  "/api/admin/influencers",
+  async(req,res)=>{
+
+    try{
+
+
+      const result =
+      await pool.query(
+        `
+        SELECT *
+        FROM influencer_profiles
+        ORDER BY id DESC
+        `
+      );
+
+
+      res.json({
+        success:true,
+        influencers:result.rows
+      });
+
+
+
+    }catch(error){
+
+      console.log(error);
+
+      res.status(500).json({
+        success:false
+      });
+
+    }
+
+});
+
+
+
+app.put(
+  "/api/admin/influencers/:id",
+  async(req,res)=>{
+
+
+    try{
+
+
+      const {id}=req.params;
+
+      const {verification_status}=req.body;
+
+
+
+      await pool.query(
+        `
+        UPDATE influencer_profiles
+        SET verification_status=$1
+        WHERE id=$2
+        `,
+        [
+          verification_status,
+          id
+        ]
+      );
+
+
+
+      res.json({
+        success:true,
+        message:"Verification updated"
+      });
+
+
+
+    }catch(error){
+
+
+      console.log(error);
+
+      res.status(500).json({
+        success:false
+      });
+
+
+    }
+
+});
+
+app.put(
+"/api/admin/influencers/:id/verify",
+async(req,res)=>{
+
+try{
+
+const {id}=req.params;
+
+const {status}=req.body;
+
+
+await pool.query(
+`
+UPDATE influencer_profiles
+SET verification_status=$1
+WHERE id=$2
+`,
+[
+status,
+id
+]
+);
+
+
+res.json({
+success:true,
+message:"Verification updated"
+});
+
+
+}catch(error){
+
+console.log(error);
+
+res.status(500).json({
+success:false
+});
+
+}
+
+});
+
 
 /* =========================
    SERVER START
