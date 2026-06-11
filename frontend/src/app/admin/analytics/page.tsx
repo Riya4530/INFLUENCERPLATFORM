@@ -11,9 +11,7 @@ const [data,setData] = useState<any>(null);
 
 useEffect(()=>{
 
-fetch(
-"http://localhost:5000/api/admin/analytics"
-)
+fetch("http://localhost:5000/api/admin/analytics")
 .then(res=>res.json())
 .then(result=>{
 

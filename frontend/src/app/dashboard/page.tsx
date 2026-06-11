@@ -32,7 +32,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
       setUser(parsedUser);
 
       fetch(
-        `http://localhost:5000/api/profile/${parsedUser.email}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${parsedUser.email}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -79,7 +79,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
   try {
 
     const response = await fetch(
-      `http://localhost:5000/api/invitations/${influencerId}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
     );
 
     const data =

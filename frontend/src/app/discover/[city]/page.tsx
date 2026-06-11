@@ -37,7 +37,7 @@ export default async function CityPage(
   const { city } = await params;
 
   const response = await fetch(
-    `http://localhost:5000/api/influencers/city/${city}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/influencers/city/${city}`,
     {
       cache: "no-store",
     }

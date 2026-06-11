@@ -13,7 +13,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      let response = await fetch("http://localhost:5000/api/login", {
+      let response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -23,7 +23,7 @@ export default function LoginPage() {
 
       // fallback to brand login
       if (!data.success) {
-        response = await fetch("http://localhost:5000/api/brands/login", {
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/brands/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),

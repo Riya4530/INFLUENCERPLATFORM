@@ -32,7 +32,7 @@ export default function BrandInfluencersPage() {
   useEffect(() => {
 
     fetch(
-      "http://localhost:5000/api/influencers"
+      `${process.env.NEXT_PUBLIC_API_URL}/api/influencers`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -63,7 +63,7 @@ export default function BrandInfluencersPage() {
         setLoading(true);
 
         const res = await fetch(
-          "http://localhost:5000/api/influencers"
+          `${process.env.NEXT_PUBLIC_API_URL}/api/influencers`
         );
 
         const data = await res.json();
@@ -123,7 +123,7 @@ setRecommended(
     );
 
     const response = await fetch(
-      `http://localhost:5000/api/campaigns/${user.id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${user.id}`
     );
 
     const data =

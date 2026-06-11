@@ -24,7 +24,7 @@ try{
 
 const response =
 await fetch(
-"http://localhost:5000/api/admin/users"
+`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`
 );
 
 
@@ -68,7 +68,7 @@ currentStatus==="Active"
 
 
 await fetch(
-`http://localhost:5000/api/admin/users/${id}`,
+`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${id}`,
 {
 method:"PUT",
 headers:{

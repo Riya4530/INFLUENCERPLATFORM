@@ -36,7 +36,7 @@ const [connectedInfluencers, setConnectedInfluencers] = useState(0);
   try {
 
     const response = await fetch(
-      `http://localhost:5000/api/campaigns/${brandId}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${brandId}`
     );
 
     const data =
@@ -58,7 +58,7 @@ const [connectedInfluencers, setConnectedInfluencers] = useState(0);
 setTotalSpend(spend);
 
 const requestsResponse = await fetch(
-  `http://localhost:5000/api/brand-requests/${brandId}`
+  `${process.env.NEXT_PUBLIC_API_URL}/api/brand-requests/${brandId}`
 );
 
 const requestsData =

@@ -59,7 +59,7 @@ export default function AdminPage() {
 
         const response =
           await fetch(
-            "http://localhost:5000/api/influencers"
+            `${process.env.NEXT_PUBLIC_API_URL}/api/influencers`
           );
 
         const data =
@@ -88,7 +88,7 @@ export default function AdminPage() {
 
         const response =
  await fetch(
- "http://localhost:5000/api/contact"
+ `${process.env.NEXT_PUBLIC_API_URL}/api/contact`
  );
         const data =
           await response.json();

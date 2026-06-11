@@ -16,7 +16,7 @@ export async function generateMetadata(
   try {
 
     const response = await fetch(
-      `http://localhost:5000/api/seo/influencer/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/seo/influencer/${id}`,
       {
         cache: "no-store",
       }
@@ -77,7 +77,7 @@ export default async function InfluencerProfilePage(
   try {
 
     const response = await fetch(
-      `http://localhost:5000/api/influencers/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/influencers/${id}`,
       {
         cache: "no-store",
       }

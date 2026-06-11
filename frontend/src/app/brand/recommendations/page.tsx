@@ -10,7 +10,7 @@ export default function RecommendationsPage() {
 
   useEffect(() => {
 
-    fetch("http://localhost:5000/api/influencers")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/influencers`)
       .then((res) => res.json())
       .then((data) => {
 

@@ -17,7 +17,7 @@ export default function RequestsPage() {
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/brand-requests/${user.id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/brand-requests/${user.id}`
       );
 
       const data = await response.json();

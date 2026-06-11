@@ -16,7 +16,7 @@ const fetchQuotations = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
     const response = await fetch(
-      `http://localhost:5000/api/brand-quotations/${user.id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/brand-quotations/${user.id}`
     );
 
     const data = await response.json();
@@ -40,7 +40,7 @@ const updateDealStatus = async (
   try {
 
     const response = await fetch(
-      `http://localhost:5000/api/deal/${requestId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/deal/${requestId}`,
       {
         method: "PUT",
         headers: {

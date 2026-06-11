@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
   alternates: {
     canonical:
-      "https://www.influencerconnect.com",
+      `${process.env.NEXT_PUBLIC_API_URL}`,
   },
 };
 

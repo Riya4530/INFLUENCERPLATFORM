@@ -53,7 +53,7 @@ export default async function CityCategoryPage(
   const { city, category } = await params;
 
   const response = await fetch(
-    `http://localhost:5000/api/influencers/city/${city}/category/${category}`,
+    `https://www.influencerconnect.com/api/influencers/city/${city}/category/${category}`,
     {
       cache: "no-store",
     }

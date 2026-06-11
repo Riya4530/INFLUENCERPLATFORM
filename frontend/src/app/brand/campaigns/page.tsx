@@ -22,7 +22,7 @@ export default function CampaignsPage() {
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${user.id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${user.id}`
       );
 
       const data =

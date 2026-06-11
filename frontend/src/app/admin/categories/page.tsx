@@ -20,9 +20,7 @@ const fetchCategories = async()=>{
 
 try{
 
-const res = await fetch(
-"http://localhost:5000/api/admin/categories"
-);
+const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`);
 
 const data = await res.json();
 
@@ -51,8 +49,7 @@ try{
 
 setLoading(true);
 
-await fetch(
-"http://localhost:5000/api/admin/categories",
+await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`,
 {
 method:"POST",
 headers:{
@@ -91,7 +88,7 @@ const deleteCategory = async(id:number)=>{
 try{
 
 await fetch(
-`http://localhost:5000/api/admin/categories/${id}`,
+`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories/${id}`,
 {
 method:"DELETE"
 }

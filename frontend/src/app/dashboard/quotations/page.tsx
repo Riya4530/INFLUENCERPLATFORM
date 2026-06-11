@@ -23,7 +23,7 @@ export default function QuotationsPage() {
 
       const profileResponse =
         await fetch(
-          `http://localhost:5000/api/profile/${user.email}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
         );
 
       const profileData =
@@ -34,7 +34,7 @@ export default function QuotationsPage() {
 
       const response =
         await fetch(
-          `http://localhost:5000/api/invitations/${influencerId}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
         );
 
       const data =
@@ -67,7 +67,7 @@ export default function QuotationsPage() {
 
       const response =
         await fetch(
-          `http://localhost:5000/api/quotation/${requestId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/quotation/${requestId}`,
           {
             method: "PUT",
             headers: {

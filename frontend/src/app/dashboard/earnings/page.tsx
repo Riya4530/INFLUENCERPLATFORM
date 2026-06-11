@@ -17,7 +17,7 @@ export default function EarningsPage() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       const response = await fetch(
-        `http://localhost:5000/api/invoices/${user.email}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${user.email}`
       );
 
       const data = await response.json();

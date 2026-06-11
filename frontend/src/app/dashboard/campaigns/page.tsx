@@ -10,14 +10,14 @@ export default function CampaignsPage() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       const profileResponse = await fetch(
-        `http://localhost:5000/api/profile/${user.email}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
       );
 
       const profileData = await profileResponse.json();
       const influencerId = profileData?.profile?.id;
 
       const response = await fetch(
-        `http://localhost:5000/api/invitations/${influencerId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
       );
 
       const data = await response.json();
@@ -39,7 +39,7 @@ export default function CampaignsPage() {
   const markCompleted = async (id: number) => {
     try {
       await fetch(
-        `http://localhost:5000/api/requests/${id}/complete`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${id}/complete`,
         {
           method: "PUT",
         }
@@ -61,7 +61,7 @@ export default function CampaignsPage() {
   const generateInvoice = async (id: number) => {
     try {
       await fetch(
-        `http://localhost:5000/api/campaigns/${id}/generate-invoice`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${id}/generate-invoice`,
         {
           method: "POST",
         }

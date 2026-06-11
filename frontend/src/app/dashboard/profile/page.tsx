@@ -36,7 +36,7 @@ fetchProfile(parsedUser.email);
 
 
 fetch(
-"http://localhost:5000/api/admin/categories"
+`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`
 )
 .then((res)=>res.json())
 .then((data)=>{
@@ -58,7 +58,7 @@ fetch(
     try {
 
       const response = await fetch(
-        `http://localhost:5000/api/profile/${email}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${email}`
       );
 
       const data = await response.json();
@@ -92,7 +92,7 @@ fetch(
     try {
 
       const response = await fetch(
-        `http://localhost:5000/api/update-profile/${user.email}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/update-profile/${user.email}`,
         {
           method: "PUT",
           headers: {

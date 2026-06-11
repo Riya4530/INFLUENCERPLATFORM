@@ -19,9 +19,9 @@ export default function SignupPage() {
 
       // ROLE-BASED SIGNUP ROUTE
       if (role === "brand") {
-        url = "http://localhost:5000/api/brands/signup";
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/brands/signup`;
       } else {
-        url = "http://localhost:5000/api/signup";
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/signup`;
       }
 
       const response = await fetch(url, {

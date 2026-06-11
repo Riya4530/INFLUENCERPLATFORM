@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
 
       const campaignRes =
         await fetch(
-          `http://localhost:5000/api/campaigns/${user.id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${user.id}`
         );
 
       const campaignData =
@@ -40,7 +40,7 @@ export default function AnalyticsPage() {
 
       const collaborationRes =
         await fetch(
-          `http://localhost:5000/api/collaborations/${user.id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/collaborations/${user.id}`
         );
 
       const collaborationData =
@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
 
       const requestRes =
         await fetch(
-          `http://localhost:5000/api/brand-requests/${user.id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/brand-requests/${user.id}`
         );
 
 

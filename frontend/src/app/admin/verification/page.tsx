@@ -13,10 +13,7 @@ export default function VerificationPage() {
 
   const fetchInfluencers = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/admin/influencers"
-      );
-
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/influencers`);
       const data = await res.json();
 
       console.log("Influencers:", data);
@@ -37,7 +34,7 @@ export default function VerificationPage() {
       setUpdating(id);
 
       const res = await fetch(
-        `http://localhost:5000/api/admin/influencers/${id}/verify`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/influencers/${id}/verify`,
         {
           method: "PUT",
           headers: {

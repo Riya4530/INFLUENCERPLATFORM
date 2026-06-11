@@ -24,7 +24,7 @@ export default function MyCollaborationsPage() {
 
         const profileResponse =
           await fetch(
-            `http://localhost:5000/api/profile/${user.email}`
+            `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
           );
 
         const profileData =
@@ -35,7 +35,7 @@ export default function MyCollaborationsPage() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/my-collaborations/${influencerId}`
+            `${process.env.NEXT_PUBLIC_API_URL}/api/my-collaborations/${influencerId}`
           );
 
         const data =

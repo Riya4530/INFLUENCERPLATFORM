@@ -36,7 +36,7 @@ const [uploading, setUploading] =
     setEmail(user.email);
 
   fetch(
-  "http://localhost:5000/api/admin/categories"
+  `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`
 )
 .then((res)=>res.json())
 .then((data)=>{
@@ -50,7 +50,7 @@ const [uploading, setUploading] =
 
 
     fetch(
-      `http://localhost:5000/api/profile/${user.email}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -118,7 +118,7 @@ const handleImageUpload = async (
 
       const response =
         await fetch(
-          "http://localhost:5000/api/upload-image",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/upload-image`,
           {
             method: "POST",
             headers: {
@@ -162,8 +162,8 @@ const handleImageUpload = async (
     try {
 
       const url = profileExists
-        ? `http://localhost:5000/api/update-profile/${email}`
-        : "http://localhost:5000/api/create-profile";
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/update-profile/${email}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/create-profile`;
 
       const method =
         profileExists

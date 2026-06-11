@@ -39,7 +39,7 @@ export default function CreateCampaign() {
       );
 
       const response = await fetch(
-        "http://localhost:5000/api/campaigns",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`,
         {
           method: "POST",
           headers: {
