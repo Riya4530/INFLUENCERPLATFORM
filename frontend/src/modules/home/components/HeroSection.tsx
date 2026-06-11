@@ -35,7 +35,7 @@ return ( <section className="bg-gradient-to-b from-gray-50 to-white px-6 py-28">
 
     <div className="flex justify-center gap-4 flex-wrap">
 
-      <Link href="/influencers">
+      <Link href="/about-us">
         <button className="bg-black text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition">
           Explore Influencers
         </button>
