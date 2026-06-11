@@ -2371,6 +2371,41 @@ success:false
 });
 
 
+app.get(
+  "/api/notifications/:userId",
+  async (req, res) => {
+
+    try {
+
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM notifications
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        `,
+        [req.params.userId]
+      );
+
+      res.json({
+        success: true,
+        notifications: result.rows
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch notifications"
+      });
+
+    }
+
+  }
+);
+
 /* =========================
    SERVER START
 ========================= */

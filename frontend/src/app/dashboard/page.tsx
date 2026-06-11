@@ -14,6 +14,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    console.log("storedUser:", storedUser);
 
     if (
       !storedUser ||

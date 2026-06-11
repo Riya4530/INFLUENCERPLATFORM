@@ -117,16 +117,7 @@ export default function DashboardLayout({
           >
             Earnings
           </Link>
-          <Link
-            href="/dashboard/messages"
-            className={`block p-4 rounded-xl ${
-              pathname === "/dashboard/messages"
-                ? "bg-white text-black"
-                : "hover:bg-gray-900"
-            }`}
-          >
-            Messages
-          </Link>
+
 
         </div>
 
