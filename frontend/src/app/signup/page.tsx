@@ -60,7 +60,7 @@ export default function SignupPage() {
       if (role === "brand") {
         router.push("/brand");
       } else {
-        router.push("/influencers");
+        router.push("/dashboard");
       }
 
     } catch (error) {

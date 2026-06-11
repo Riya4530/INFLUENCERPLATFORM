@@ -1471,6 +1471,73 @@ app.post(
 
   }
 );
+
+app.get(
+  "/api/campaigns",
+  async (req, res) => {
+
+    try {
+
+      const campaigns =
+        await pool.query(
+          `
+        SELECT
+  campaigns.*,
+  json_agg(requests) AS requests
+FROM campaigns
+LEFT JOIN requests ON campaigns.id = requests.campaign_id
+GROUP BY campaigns.id;
+          `
+        );
+
+      res.json({
+        success: true,
+        campaigns:
+          campaigns.rows,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
+app.put("/api/campaigns/:id/complete", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE campaigns
+      SET status = 'Completed'
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Campaign not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      campaign: result.rows[0],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false });
+  }
+});
 app.post(
 "/api/campaigns/:id/generate-invoice",
 async (req, res) => {
@@ -1529,6 +1596,7 @@ try {
 
   const request =
     requestResult.rows[0];
+    
 
   const brandResult =
     await pool.query(
@@ -1567,39 +1635,37 @@ try {
   const total =
     amount + gst;
 
-  const insertResult = await pool.query(
-  `
-  INSERT INTO invoices
-  (
-    influencer_email,
-    client_name,
-    campaign_name,
-    amount,
-    gst,
-    total,
-    status
-  )
-  VALUES
-  ($1,$2,$3,$4,$5,$6,$7)
-  RETURNING *
-  `,
-  [
-    influencer.user_email,
-    brand.name,
-    campaign.title,
-    amount,
-    gst,
-    total,
-    "Pending",
-  ]
-);
+  await pool.query(
+    `
+    INSERT INTO invoices
+    (
+      influencer_email,
+      client_name,
+      campaign_name,
+      amount,
+      gst,
+      total,
+      status
+    )
+    VALUES
+    ($1,$2,$3,$4,$5,$6,$7)
+    `,
+    [
+      influencer.user_email,
+      brand.name,
+      campaign.title,
+      amount,
+      gst,
+      total,
+      "Pending",
+    ]
+  );
 
-res.json({
-  success: true,
-  message: "Invoice generated successfully",
-  invoice: insertResult.rows[0],
-});
-
+  res.json({
+    success: true,
+    message:
+      "Invoice generated successfully",
+  });
 
 } catch (error) {
 
@@ -1612,168 +1678,62 @@ res.json({
 
 }
 
+
 }
 );
+/* =========================
+   CREATE INVOICE
+========================= */
 
-
-app.post("/api/campaigns/:id/generate-invoice", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // 1. Get campaign
-    const campaignResult = await pool.query(
-      `
-      SELECT *
-      FROM campaigns
-      WHERE id = $1
-      `,
-      [id]
-    );
-
-    if (campaignResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Campaign not found",
-      });
-    }
-
-    const campaign = campaignResult.rows[0];
-
-    // 2. Get accepted request
-    const requestResult = await pool.query(
-      `
-      SELECT *
-      FROM requests
-      WHERE campaign_id = $1
-      AND status = 'Accepted'
-      LIMIT 1
-      `,
-      [id]
-    );
-
-    if (requestResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No accepted influencer found",
-      });
-    }
-
-    const request = requestResult.rows[0];
-
-    console.log("REQUEST:", request);
-
-    // 3. Get brand
-    const brandResult = await pool.query(
-      `
-      SELECT *
-      FROM users
-      WHERE id = $1
-      `,
-      [request.brand_id]
-    );
-
-    const brand = brandResult.rows[0];
-
-    // 4. Get influencer
-    const influencerResult = await pool.query(
-      `
-      SELECT *
-      FROM influencer_profiles
-      WHERE id = $1
-      `,
-      [request.influencer_id]
-    );
-
-    const influencer = influencerResult.rows[0];
-
-    console.log("BRAND:", brand);
-    console.log("INFLUENCER:", influencer);
-    console.log("CAMPAIGN:", campaign);
-
-    // 5. HARD VALIDATION (THIS PREVENTS SILENT FAILURES)
-    if (!brand || !influencer || !campaign) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing data for invoice generation",
-        debug: {
-          brand,
-          influencer,
-          campaign,
-        },
-      });
-    }
-
-    // 6. Calculate amount
-    const amount = Number(request.quotation_amount || 0);
-    const gst = amount * 0.18;
-    const total = amount + gst;
-
-    // 7. Insert invoice
-    const insertResult = await pool.query(
-      `
-      INSERT INTO invoices
-      (
-        influencer_email,
-        client_name,
-        campaign_name,
-        amount,
-        gst,
-        total,
-        status
-      )
-      VALUES
-      ($1,$2,$3,$4,$5,$6,$7)
-      RETURNING *
-      `,
-      [
-        influencer.user_email || influencer.email,
-        brand.name,
-        campaign.title,
-        amount,
-        gst,
-        total,
-        "Pending",
-      ]
-    );
-
-    console.log("INVOICE CREATED:", insertResult.rows[0]);
-
-    // 8. Response
-    return res.json({
-      success: true,
-      message: "Invoice generated successfully",
-      invoice: insertResult.rows[0],
-    });
-
-  } catch (error) {
-    console.log("INVOICE ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-      error: error.message,
-    });
-  }
-});
-app.get(
-  "/api/campaigns",
+app.post(
+  "/api/invoices",
   async (req, res) => {
 
     try {
 
-      const campaigns =
+      const {
+        influencer_email,
+        client_name,
+        campaign_name,
+        amount,
+      } = req.body;
+
+      const gst =
+        Number(amount) * 0.18;
+
+      const total =
+        Number(amount) + gst;
+
+      const result =
         await pool.query(
           `
-          SELECT *
-          FROM campaigns
-          ORDER BY id DESC
-          `
+         INSERT INTO invoices
+(
+  influencer_email,
+  client_name,
+  campaign_name,
+  amount,
+  gst,
+  total,
+  status
+)
+          VALUES
+          ($1,$2,$3,$4,$5,$6)
+          RETURNING *
+          `,
+          [
+            influencer_email,
+            client_name,
+            campaign_name,
+            amount,
+            gst,
+            total,
+          ]
         );
 
       res.json({
         success: true,
-        campaigns:
-          campaigns.rows,
+        invoice: result.rows[0],
       });
 
     } catch (error) {
@@ -1782,14 +1742,41 @@ app.get(
 
       res.status(500).json({
         success: false,
+        message: "Failed to create invoice",
       });
 
     }
 
   }
 );
+app.get("/api/invoices/:email", async (req, res) => {
+  try {
+    const email = req.params.email?.trim().toLowerCase();
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM invoices
+      WHERE LOWER(influencer_email) = $1
+      ORDER BY id DESC
+      `,
+      [email]
+    );
+
+    res.json({
+      success: true,
+      invoices: result.rows,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      invoices: [],
+    });
+  }
+});
 app.put(
-  "/api/campaigns/:id/complete",
+  "/api/invoices/:id/pay",
   async (req, res) => {
 
     try {
@@ -1798,8 +1785,8 @@ app.put(
 
       await pool.query(
         `
-        UPDATE campaigns
-        SET status = 'Completed'
+        UPDATE invoices
+        SET status = 'Paid'
         WHERE id = $1
         `,
         [id]
@@ -1807,6 +1794,7 @@ app.put(
 
       res.json({
         success: true,
+        message: "Invoice marked as paid",
       });
 
     } catch (error) {
@@ -1821,93 +1809,114 @@ app.put(
 
   }
 );
-app.put(
-"/api/requests/:id/complete",
-async (req, res) => {
+// app.post("/api/invoices/generate/:requestId", async (req, res) => {
+//   try {
+//     const { requestId } = req.params;
 
+//     const requestResult = await pool.query(
+//       `
+//       SELECT *
+//       FROM requests
+//       WHERE id = $1
+//       `,
+//       [requestId]
+//     );
 
-try {
+//     const request = requestResult.rows[0];
 
-  const { id } = req.params;
+//     if (!request) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Request not found",
+//       });
+//     }
 
-  await pool.query(
-    `
-    UPDATE requests
-    SET deal_status = 'Completed'
-    WHERE id = $1
-    `,
-    [id]
-  );
+//     if (!request.quotation_amount) {
+//       return res.json({
+//         success: false,
+//         message: "Quotation not sent yet",
+//       });
+//     }
 
-  res.json({
-    success: true,
-    message: "Campaign completed",
-  });
+//     if (request.deal_status !== "Accepted") {
+//       return res.json({
+//         success: false,
+//         message: "Deal not active",
+//       });
+//     }
 
-} catch (error) {
+//     if (request.invoice_generated) {
+//       return res.json({
+//         success: false,
+//         message: "Invoice already generated",
+//       });
+//     }
 
-  console.log(error);
+//     const campaign = await pool.query(
+//       `SELECT * FROM campaigns WHERE id = $1`,
+//       [request.campaign_id]
+//     );
 
-  res.status(500).json({
-    success: false,
-  });
+//     const brand = await pool.query(
+//       `SELECT * FROM users WHERE id = $1`,
+//       [request.brand_id]
+//     );
 
-}
+//     const influencer = await pool.query(
+//       `SELECT * FROM influencer_profiles WHERE id = $1`,
+//       [request.influencer_id]
+//     );
 
+//     const amount = Number(request.quotation_amount);
+//     const gst = amount * 0.18;
+//     const total = amount + gst;
 
-}
-);
+//     const invoice = await pool.query(
+//       `
+//       INSERT INTO invoices (
+//         influencer_email,
+//         client_name,
+//         campaign_name,
+//         amount,
+//         gst,
+//         total,
+//         status
+//       )
+//       VALUES ($1,$2,$3,$4,$5,$6,$7)
+//       RETURNING *
+//       `,
+//       [
+//         influencer.rows[0].user_email,
+//         brand.rows[0].name,
+//         campaign.rows[0].title,
+//         amount,
+//         gst,
+//         total,
+//         "Pending",
+//       ]
+//     );
 
-app.put(
-  "/api/invoices/:id/pay",
-  async (req, res) => {
+//     await pool.query(
+//       `
+//       UPDATE requests
+//       SET invoice_generated = true
+//       WHERE id = $1
+//       `,
+//       [requestId]
+//     );
 
-    const { id } = req.params;
+//     return res.json({
+//       success: true,
+//       invoice: invoice.rows[0],
+//     });
 
-    const result =
-      await pool.query(
-        `
-        UPDATE invoices
-        SET status = 'Paid'
-        WHERE id = $1
-        RETURNING *
-        `,
-        [id]
-      );
-
-    console.log(result.rows);
-
-    res.json({
-      success: true
-    });
-
-  }
-);
-app.delete(
-  "/api/invoices/:id",
-  async (req, res) => {
-
-    const { id } = req.params;
-
-    const result =
-      await pool.query(
-        `
-        DELETE FROM invoices
-        WHERE id = $1
-        RETURNING *
-        `,
-        [id]
-      );
-
-    console.log(result.rows);
-
-    res.json({
-      success: true
-    });
-
-  }
-);
-
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//     });
+//   }
+// });
 /* =========================
    GET BRAND CAMPAIGNS
 ========================= */
