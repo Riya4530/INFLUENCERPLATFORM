@@ -11,74 +11,49 @@ export default function EarningsPage() {
       pending: 0,
     });
 
-  useEffect(() => {
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-    const fetchData =
-      async () => {
+      const response = await fetch(
+        `http://localhost:5000/api/invoices/${user.email}`
+      );
 
-        try {
+      const data = await response.json();
 
-          const response =
-            await fetch(
-              "http://localhost:5000/api/invoices"
-            );
+      const invoices = data.invoices || [];
 
-          const data =
-            await response.json();
+      const total = invoices.reduce(
+        (sum: number, invoice: any) =>
+          sum + Number(invoice.total || 0),
+        0
+      );
 
-          const invoices =
-            data.invoices || [];
+      const paid = invoices
+        .filter((i: any) => i.status === "Paid")
+        .reduce(
+          (sum: number, invoice: any) =>
+            sum + Number(invoice.total || 0),
+          0
+        );
 
-          const total =
-            invoices.reduce(
-              (sum: number, invoice: any) =>
-                sum + Number(invoice.total || 0),
-              0
-            );
+      const pending = invoices
+        .filter((i: any) => i.status !== "Paid")
+        .reduce(
+          (sum: number, invoice: any) =>
+            sum + Number(invoice.total || 0),
+          0
+        );
 
-          const paid =
-            invoices
-              .filter(
-                (invoice: any) =>
-                  invoice.status === "Paid"
-              )
-              .reduce(
-                (sum: number, invoice: any) =>
-                  sum +
-                  Number(invoice.total || 0),
-                0
-              );
+      setStats({ total, paid, pending });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-          const pending =
-            invoices
-              .filter(
-                (invoice: any) =>
-                  invoice.status !== "Paid"
-              )
-              .reduce(
-                (sum: number, invoice: any) =>
-                  sum +
-                  Number(invoice.total || 0),
-                0
-              );
-
-          setStats({
-            total,
-            paid,
-            pending,
-          });
-
-        } catch (error) {
-
-          console.log(error);
-
-        }
-
-      };
-
-    fetchData();
-
-  }, []);
+  fetchData();
+}, []);
 
   return (
 
