@@ -64,14 +64,32 @@ const requestsResponse = await fetch(
 const requestsData =
   await requestsResponse.json();
 
+console.log("FULL RESPONSE");
+console.log(requestsData);
+
+  console.log("Requests Data:", requestsData.requests);
+
 const acceptedRequests =
   (requestsData.requests || []).filter(
     (request: any) =>
       request.status === "Accepted"
   );
 
+console.log(
+  "Accepted Requests:",
+  acceptedRequests
+);
+
+const uniqueInfluencers =
+  new Set(
+    acceptedRequests.map(
+      (request: any) =>
+        request.influencer_id
+    )
+  );
+
 setConnectedInfluencers(
-  acceptedRequests.length
+  uniqueInfluencers.size
 );
 
   } catch (error) {
