@@ -393,7 +393,7 @@ app.get("/api/influencers", async (req, res) => {
   JOIN users
     ON users.email =
        influencer_profiles.user_email
-  WHERE users.status = 'Active'
+WHERE LOWER(users.status) = 'active'
   AND influencer_profiles.verification_status = 'Verified'
   ORDER BY influencer_profiles.id DESC
 `);
@@ -964,8 +964,11 @@ app.get("/api/brand-quotations/:brandId", async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false });
+    console.log(error);res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 
@@ -1267,7 +1270,11 @@ app.post("/api/requests", async (req, res) => {
 
   } catch (error) {
     console.log("Request API error:", error);
-    res.status(500).json({ success: false });
+   res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 
@@ -1284,7 +1291,11 @@ app.get("/api/requests", async (req, res) => {
 
   } catch (error) {
     console.log("Fetch requests error:", error);
-    res.status(500).json({ success: false });
+res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 
@@ -1360,7 +1371,11 @@ app.post("/api/brands/signup", async (req, res) => {
 
   } catch (error) {
     console.log("Signup error:", error);
-    res.status(500).json({ success: false });
+   res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 
@@ -1407,7 +1422,11 @@ app.post("/api/brands/login", async (req, res) => {
 
   } catch (error) {
     console.log("Login error:", error);
-    res.status(500).json({ success: false });
+res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 
@@ -1535,7 +1554,11 @@ app.put("/api/campaigns/:id/complete", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false });
+    res.status(500).json({
+  success: false,
+  error: error.message,
+  stack: error.stack
+});
   }
 });
 app.post(
