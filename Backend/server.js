@@ -12,12 +12,23 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://influencerplatformfend.up.railway.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://your-frontend-url.up.railway.app"
-  ],
-   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  origin: function (origin, callback) {
+    // allow requests with no origin (mobile apps / postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));app.options(/.*/, cors());
 app.use(express.json());
