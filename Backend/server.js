@@ -1091,7 +1091,7 @@ app.get(
             b.name AS brand_name
           FROM requests r
           LEFT JOIN campaigns c
-            ON c.id::text = r.campaign_id
+  ON c.id = r.campaign_id
           LEFT JOIN users b
             ON b.id = r.brand_id
           WHERE r.influencer_id = $1
