@@ -50,7 +50,7 @@ export default function SignupPage() {
         "user",
         JSON.stringify({
           role: role,
-          user: data.user || data.brand,
+          user: data.user,
         })
       );
 
