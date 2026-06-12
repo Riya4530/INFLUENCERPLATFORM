@@ -53,7 +53,7 @@ export default function SignupPage() {
       if (role === "brand") {
         router.push("/brand");
       } else {
-        router.push("/dashboard");
+        router.push("/login");
       }
 
     } catch (error) {

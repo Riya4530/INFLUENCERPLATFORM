@@ -82,7 +82,7 @@ export default function RecommendationsPage() {
                 id={influencer.id}
                 name={influencer.name}
                 category={influencer.category}
-                followers={influencer.followers}
+                followers_count={influencer.followers_count ?? influencer.followers}
                 city={influencer.city}
                 instagram={influencer.instagram}
                 image={influencer.image}

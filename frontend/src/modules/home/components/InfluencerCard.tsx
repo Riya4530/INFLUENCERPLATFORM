@@ -8,7 +8,7 @@ type InfluencerCardProps = {
   id:  string;
   name?: string;
   category?: string;
-  followers?: number | string;
+  followers_count?: number | string;
   instagram?: string;
   city?: string;
   image?: string;
@@ -19,7 +19,7 @@ export default function InfluencerCard({
   id,
   name,
   category,
-  followers,
+  followers_count,
   instagram,
   city,
   image,
@@ -63,7 +63,7 @@ const handleFavourite = (
       id,
       name,
       category,
-      followers,
+      followers_count: followers_count,
       city,
       instagram,
       image,
@@ -118,8 +118,8 @@ const handleFavourite = (
         </p>
 
         <p className="text-gray-500 text-sm">
-          Followers: {followers || "0"}
-        </p>
+          Followers: {followers_count || "0"}
+        </p>``
 
         {city && (
           <p className="text-gray-500 text-sm">

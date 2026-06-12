@@ -43,7 +43,7 @@ export default function FavouriteInfluencersPage() {
                 id={item.id}
                 name={item.name}
                 category={item.category}
-                followers={item.followers}
+                followers_count={item.followers_count ?? item.followers}
                 city={item.city}
                 instagram={item.instagram}
                 image={item.image}

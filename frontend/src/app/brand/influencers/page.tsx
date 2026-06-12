@@ -77,8 +77,8 @@ const recommendedList =
   [...list]
     .sort(
       (a, b) =>
-        Number(b.followers || 0) -
-        Number(a.followers || 0)
+        Number(b.followers_count || 0) -
+        Number(a.followers_count || 0)
     )
     .slice(0, 3);
 
@@ -301,7 +301,7 @@ fetchCampaigns();
                 id={inf.id}
                 name={inf.name}
                 category={inf.category}
-                followers={inf.followers}
+                followers_count={inf.followers_count ?? inf.followers}
                 city={inf.city}
                 instagram={inf.instagram}
                 image={inf.image}
@@ -412,6 +412,7 @@ fetchCampaigns();
     console.log("USER =", user);
 console.log("BRAND ID =", user?.id);
 console.log("INFLUENCER ID =", selectedInfluencer?.id);
+console.log("SELECTED INFLUENCER =", selectedInfluencer);
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/invitations`,

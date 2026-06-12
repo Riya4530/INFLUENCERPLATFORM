@@ -55,7 +55,7 @@ export default function FeaturedInfluencersSection() {
               id={influencer.id ?? influencer.slug}
               name={influencer.name}
               category={influencer.category}
-              followers={influencer.followers}
+              followers_count={influencer.followers_count ?? influencer.followers}
               city={influencer.city}
               image={influencer.image}
             />
