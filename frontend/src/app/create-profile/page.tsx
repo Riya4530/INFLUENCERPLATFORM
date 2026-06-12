@@ -96,7 +96,6 @@ const [uploading, setUploading] =
       .catch((err) =>
         console.log(err)
       );
-
   }, []);
 const handleImageUpload = async (
   e: React.ChangeEvent<HTMLInputElement>

@@ -12,7 +12,13 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://your-frontend-url.up.railway.app"
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Simple in-memory SSE clients map

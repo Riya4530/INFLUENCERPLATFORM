@@ -8,7 +8,7 @@ export default function FeaturedInfluencersSection() {
 
   useEffect(() => {
     // fetch initial list
-    fetch("http://localhost:5000/api/influencers")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/influencers`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.success && Array.isArray(data.influencers)) {
@@ -18,7 +18,7 @@ export default function FeaturedInfluencersSection() {
       .catch(() => {});
 
     // subscribe to SSE
-    const es = new EventSource("http://localhost:5000/api/influencers/stream");
+    const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/api/influencers/stream`);
     es.onmessage = (e) => {
       try {
         const payload = JSON.parse(e.data);
