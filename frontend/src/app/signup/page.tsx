@@ -15,15 +15,8 @@ export default function SignupPage() {
     e.preventDefault();
 
     try {
-      let url = "";
-
-      // ROLE-BASED SIGNUP ROUTE
-      if (role === "brand") {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/brands/signup`;
-      } else {
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/signup`;
-      }
-
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/signup`;
+    
       const response = await fetch(url, {
         method: "POST",
         headers: {
