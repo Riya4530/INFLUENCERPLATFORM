@@ -397,15 +397,16 @@ app.post("/api/upload-image", async (req, res) => {
 app.get("/api/influencers", async (req, res) => {
   try {
     const profiles = await pool.query(`
-  SELECT
-    influencer_profiles.*
-  FROM influencer_profiles
-  JOIN users
-    ON users.email =
-       influencer_profiles.user_email
+SELECT
+  influencer_profiles.*,
+  users.id AS user_id
+FROM influencer_profiles
+JOIN users
+  ON users.email =
+     influencer_profiles.user_email
 WHERE LOWER(users.status) = 'active'
   AND influencer_profiles.verification_status = 'Verified'
-  ORDER BY influencer_profiles.id DESC
+ORDER BY influencer_profiles.id DESC
 `);
 
     res.json({

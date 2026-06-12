@@ -425,7 +425,7 @@ console.log("SELECTED INFLUENCER =", selectedInfluencer);
         body: JSON.stringify({
           brand_id: user.id,
           influencer_id:
-            selectedInfluencer.id,
+            selectedInfluencer.user_id,
           campaign_id:
             campaignId,
         }),
