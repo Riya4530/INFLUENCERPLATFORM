@@ -143,7 +143,7 @@ export default async function InfluencerProfilePage(
             </p>
 
             <p className="text-xl font-semibold mb-6">
-              👥 {influencer.followers} Followers
+              👥 {influencer.followers_count || influencer.followers} Followers
             </p>
 
             <p className="text-lg text-gray-700 leading-8 mb-8">
