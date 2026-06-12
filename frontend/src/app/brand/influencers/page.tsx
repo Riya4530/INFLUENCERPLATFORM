@@ -414,7 +414,7 @@ console.log("BRAND ID =", user?.id);
 console.log("INFLUENCER ID =", selectedInfluencer?.id);
 
     const response = await fetch(
-      "http://localhost:5000/api/invitations",
+      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations`,
       {
         method: "POST",
         headers: {

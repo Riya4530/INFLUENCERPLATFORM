@@ -139,7 +139,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
 
               <div>
 
-                <h1 className="text-5xl font-bold mb-2">
+                <h1 className="text-3xl md:text-5xl font-bold mb-2">
                   Welcome Back 👋
                 </h1>
 
@@ -193,7 +193,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
 
         {/* STATS */}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
 
           <div className="bg-black text-white rounded-3xl p-8 shadow-lg">
 
@@ -266,7 +266,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
 
 </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
 
           {!hasProfile && (
 

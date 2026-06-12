@@ -307,7 +307,7 @@ app.post(
         name,
         category,
         city,
-        followers,
+        followers_count,
         bio,
         instagram,
         image,
@@ -321,7 +321,7 @@ app.post(
           name,
           category,
           city,
-          followers,
+          followers_count,
           bio,
           instagram,
           image
@@ -334,7 +334,7 @@ app.post(
           name,
           category,
           city,
-          followers,
+          followers_count,
           bio,
           instagram,
           image,
@@ -621,7 +621,7 @@ app.get(
         SELECT *
         FROM influencer_profiles
         WHERE LOWER(city) = LOWER($1)
-        ORDER BY followers DESC
+        ORDER BY followers_count DESC
         `,
         [city]
       );
@@ -747,7 +747,7 @@ app.put(
         name,
         category,
         city,
-        followers,
+        followers_count,
         bio,
         instagram,
         image,
@@ -760,7 +760,7 @@ app.put(
           name = $1,
           category = $2,
           city = $3,
-          followers = $4,
+          followers_count = $4,
           bio = $5,
           instagram = $6,
           image = $7
@@ -770,7 +770,7 @@ app.put(
           name,
           category,
           city,
-          followers,
+          followers_count,
           bio,
           instagram,
           image,

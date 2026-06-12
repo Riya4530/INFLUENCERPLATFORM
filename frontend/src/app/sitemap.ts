@@ -4,7 +4,7 @@ export default async function sitemap():
 Promise<MetadataRoute.Sitemap> {
 
   const response = await fetch(
-    "http://localhost:5000/api/influencers",
+    `${process.env.NEXT_PUBLIC_API_URL}/api/influencers`,
     {
       cache: "no-store",
     }

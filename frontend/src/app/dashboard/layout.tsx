@@ -12,11 +12,10 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+<div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
 
       {/* SIDEBAR */}
-
-      <aside className="w-72 bg-black text-white flex flex-col">
+<aside className="w-full md:w-72 bg-black text-white flex flex-col">
 
         <div className="p-8 border-b border-gray-800">
 
@@ -30,7 +29,7 @@ export default function DashboardLayout({
 
         </div>
 
-        <div className="flex-1 p-5 space-y-3">
+        <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-visible p-3 md:p-5 gap-2 md:gap-3">
 
           <Link
             href="/dashboard"
@@ -138,8 +137,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* PAGE CONTENT */}
-
-      <main className="flex-1 overflow-y-auto">
+<main className="flex-1 overflow-y-auto p-4 md:p-0">
         {children}
       </main>
 
