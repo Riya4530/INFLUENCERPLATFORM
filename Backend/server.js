@@ -372,36 +372,23 @@ app.post(
 );
 
 app.post("/api/upload-image", async (req, res) => {
-
   try {
-
     const { image } = req.body;
 
-    const result = await cloudinary.uploader.upload(
-      image,
-      {
-        folder: "influencers",
-      }
-    );
+    const result = await cloudinary.uploader.upload(image, {
+      folder: "profiles",
+    });
 
     res.json({
       success: true,
       imageUrl: result.secure_url,
     });
 
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Upload failed",
-    });
-
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false });
   }
-
 });
-
 
 /* =========================
    GET ALL INFLUENCERS

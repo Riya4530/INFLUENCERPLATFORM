@@ -75,7 +75,7 @@ const [uploading, setUploading] =
           );
 
           setFollowers(
-            data.profile.followers || ""
+            data.profile.followers_count || ""
           );
 
           setBio(
@@ -132,7 +132,7 @@ const handleImageUpload = async (
 
       const data =
         await response.json();
-
+console.log("UPLOAD RESPONSE:", data);
       if (data.success) {
 
         setImage(data.imageUrl);
@@ -181,7 +181,7 @@ const handleImageUpload = async (
             name,
             category,
             city,
-            followers,
+            followers_count: followers,
             bio,
             instagram,
             image,
