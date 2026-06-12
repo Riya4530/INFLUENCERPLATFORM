@@ -17,8 +17,10 @@ app.use(cors({
     "http://localhost:3000",
     "https://your-frontend-url.up.railway.app"
   ],
+   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true
 }));
+app.options("*", cors());
 app.use(express.json());
 
 // Simple in-memory SSE clients map
