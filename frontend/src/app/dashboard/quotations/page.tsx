@@ -13,51 +13,37 @@ export default function QuotationsPage() {
 
   }, []);
 
-  const fetchRequests = async () => {
+ const fetchRequests = async () => {
+  try {
 
-    try {
+    const user = JSON.parse(
+      localStorage.getItem("user") || "{}"
+    );
 
-      const user = JSON.parse(
-        localStorage.getItem("user") || "{}"
+    const response =
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${user.id}`
       );
 
-      const profileResponse =
-        await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
-        );
+    const data =
+      await response.json();
 
-      const profileData =
-        await profileResponse.json();
-
-      const influencerId =
-        profileData.profile.id;
-
-      const response =
-        await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
-        );
-
-      const data =
-        await response.json();
-
-      const acceptedRequests =
-        (data.invitations || []).filter(
-          (item: any) =>
-            item.status === "Accepted"
-        );
-
-      setRequests(
-        acceptedRequests
+    const acceptedRequests =
+      (data.invitations || []).filter(
+        (item: any) =>
+          item.status === "Accepted"
       );
 
-    } catch (error) {
+    setRequests(
+      acceptedRequests
+    );
 
-      console.log(error);
+  } catch (error) {
 
-    }
+    console.log(error);
 
-  };
-
+  }
+};
   const submitQuote = async (
     requestId: number,
     amount: string

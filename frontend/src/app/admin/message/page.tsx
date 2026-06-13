@@ -14,7 +14,7 @@ export default function ContactMessagesPage() {
         );
         const data = await res.json();
 
-        setMessages(data.data || []);
+        setMessages(data.messages || []);
       } catch (err) {
         console.log(err);
       } finally {
