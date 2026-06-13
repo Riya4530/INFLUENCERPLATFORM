@@ -10,7 +10,7 @@ export default function ContactMessagesPage() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contact`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/contact`
         );
         const data = await res.json();
 
