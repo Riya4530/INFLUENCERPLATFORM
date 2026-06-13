@@ -14,38 +14,30 @@ export default function BookingsPage() {
 
   const fetchRequests = async () => {
 
-    try {
+  try {
 
-      const user = JSON.parse(
-  localStorage.getItem("user") || "{}"
-);
+    const user = JSON.parse(
+      localStorage.getItem("user") || "{}"
+    );
 
-const profileResponse = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
-);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${user.id}`
+    );
 
-const profileData =
-  await profileResponse.json();
+    const data =
+      await response.json();
 
-const influencerId =
-  profileData.profile.id;
+    setRequests(
+      data.invitations || []
+    );
 
-const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
-);
-     const data = await response.json();
+  } catch (error) {
 
-setRequests(
-  data.invitations || []
-);
+    console.log(error);
 
-    } catch (error) {
+  }
 
-      console.log(error);
-
-    }
-
-  };
+};
 
   const updateStatus = async (
   requestId: number,
