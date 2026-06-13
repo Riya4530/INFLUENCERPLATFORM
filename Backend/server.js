@@ -1350,7 +1350,40 @@ app.put(
 
   }
 );
+app.put(
+  "/api/requests/:id/complete",
+  async (req, res) => {
 
+    try {
+
+      const { id } = req.params;
+
+      await pool.query(
+        `
+        UPDATE requests
+        SET status = 'Completed'
+        WHERE id = $1
+        `,
+        [id]
+      );
+
+      res.json({
+        success: true,
+        message: "Campaign marked completed",
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+      });
+
+    }
+
+  }
+);
 
 /* =========================
    CREATE CAMPAIGN

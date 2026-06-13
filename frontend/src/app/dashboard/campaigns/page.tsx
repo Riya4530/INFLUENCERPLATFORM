@@ -22,11 +22,12 @@ export default function CampaignsPage() {
 
       const data = await response.json();
 
-      const acceptedCampaigns = (data.invitations || []).filter(
-        (item: any) => item.status === "Accepted" || item.status === "Completed"
-      );
+      const activeCampaigns = (data.invitations || []).filter(
+  (item: any) =>
+    item.deal_status === "Accepted"
+);
 
-      setCampaigns(acceptedCampaigns);
+setCampaigns(activeCampaigns);
     } catch (error) {
       console.log(error);
     }
@@ -48,7 +49,7 @@ export default function CampaignsPage() {
       // ✅ Instant UI update (no refetch needed)
       setCampaigns((prev) =>
         prev.map((c) =>
-          c.campaign_id === id
+          c.id === id
             ? { ...c, status: "Completed" }
             : c
         )
@@ -124,7 +125,7 @@ export default function CampaignsPage() {
                 {campaign.status !== "Completed" && (
                   <button
                     onClick={() =>
-                      markCompleted(campaign.campaign_id)
+                      markCompleted(campaign.id)
                     }
                     className="bg-black text-white px-6 py-3 rounded-xl"
                   >
@@ -135,7 +136,7 @@ export default function CampaignsPage() {
                 {campaign.status === "Completed" && (
                   <button
                     onClick={() =>
-                      generateInvoice(campaign.campaign_id)
+                      generateInvoice(campaign.id)
                     }
                     className="bg-green-600 text-white px-6 py-3 rounded-xl"
                   >
