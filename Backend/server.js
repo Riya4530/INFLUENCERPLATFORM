@@ -955,17 +955,21 @@ app.get("/api/brand-quotations/:brandId", async (req, res) => {
   const result = await pool.query(
   `
   SELECT
-    r.*,
-    c.title,
-    i.name AS influencer_name
-  FROM requests r
-  LEFT JOIN campaigns c
-    ON c.id::text = r.campaign_id
-  LEFT JOIN influencer_profiles i
-    ON i.id = r.influencer_id
-  WHERE r.brand_id = $1
-  AND r.quotation_amount IS NOT NULL
-  ORDER BY r.created_at DESC
+  r.*,
+  c.title,
+  u.name AS influencer_name
+FROM requests r
+
+LEFT JOIN campaigns c
+  ON c.id = r.campaign_id
+
+LEFT JOIN users u
+  ON u.id = r.influencer_id
+
+WHERE r.brand_id = $1
+AND r.quotation_amount IS NOT NULL
+
+ORDER BY r.created_at DESC
   `,
   [brandId]
 ); 
