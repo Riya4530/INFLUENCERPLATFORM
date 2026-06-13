@@ -9,12 +9,7 @@ export default function CampaignsPage() {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-      const profileResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.email}`
-      );
-
-      const profileData = await profileResponse.json();
-      const influencerId = profileData?.profile?.id;
+      const influencerId =user.id;
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
