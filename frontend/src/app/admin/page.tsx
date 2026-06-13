@@ -217,9 +217,8 @@ export default function AdminPage() {
 
               <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
  <a
-            href="/admin/influencers"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          ></a>
+            href="/influencers"
+               >
                 <h2 className="text-xl font-bold mb-2">
                   View Influencers
                 </h2>
@@ -227,14 +226,13 @@ export default function AdminPage() {
                 <p className="text-gray-500">
                   Manage creator profiles
                 </p>
-
+</a>
               </div>
 
               <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
  <a
-            href="/admin/messages"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          ></a>
+            href="/admin/message"
+             >
                 <h2 className="text-xl font-bold mb-2">
                   View Messages
                 </h2>
@@ -242,14 +240,13 @@ export default function AdminPage() {
                 <p className="text-gray-500">
                   Review contact requests
                 </p>
-
+</a>
               </div>
 
               <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
  <a
             href="/admin/analytics"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          ></a>
+          >
                 <h2 className="text-xl font-bold mb-2">
                   Platform Overview
                 </h2>
@@ -257,7 +254,7 @@ export default function AdminPage() {
                 <p className="text-gray-500">
                   Monitor platform performance
                 </p>
-
+</a>
               </div>
 
             </div>

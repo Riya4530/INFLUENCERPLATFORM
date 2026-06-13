@@ -11,7 +11,8 @@ export default function CreateCampaign() {
     useState("");
 
   const [category, setCategory] =
-    useState("Food");
+    useState("");
+  const [categories, setCategories] = useState<any[]>([]);
 
   const [description, setDescription] =
     useState("");
@@ -164,34 +165,33 @@ export default function CreateCampaign() {
             <label className="block mb-3 font-semibold">
               Category
             </label>
+<select
+  value={category}
+  onChange={(e) =>
+    setCategory(e.target.value)
+  }
+  className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:border-black"
+>
 
-            <select
-              value={category}
-              onChange={(e) =>
-                setCategory(
-                  e.target.value
-                )
-              }
-              className="w-full border border-gray-300 rounded-2xl px-5 py-4"
-            >
 
-              <option>
-                Food
-              </option>
+<option value="">
+  Select Category
+</option>
 
-              <option>
-                Fashion
-              </option>
 
-              <option>
-                Tech
-              </option>
+{categories.map((cat)=>(
 
-              <option>
-                Lifestyle
-              </option>
+<option
+  key={cat.id}
+  value={cat.name}
+>
+  {cat.name}
+</option>
 
-            </select>
+))}
+
+
+</select>
 
           </div>
 
