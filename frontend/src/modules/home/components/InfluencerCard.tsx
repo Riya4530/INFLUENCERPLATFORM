@@ -119,7 +119,7 @@ const handleFavourite = (
 
         <p className="text-gray-500 text-sm">
           Followers: {followers_count || "0"}
-        </p>``
+        </p>
 
         {city && (
           <p className="text-gray-500 text-sm">

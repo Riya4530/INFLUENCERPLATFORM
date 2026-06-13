@@ -857,7 +857,7 @@ app.get(
 
       const { influencerId } =
         req.params;
-
+console.log("REQUESTED INFLUENCER ID:", influencerId);
       const result =
         await pool.query(
           `
@@ -880,7 +880,7 @@ app.get(
           `,
           [influencerId]
         );
-
+console.log(result.rows);
       res.json({
         success: true,
         invitations:

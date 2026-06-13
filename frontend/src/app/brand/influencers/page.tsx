@@ -305,9 +305,7 @@ fetchCampaigns();
                 city={inf.city}
                 instagram={inf.instagram}
                 image={inf.image}
-                verification_status={
-  inf.verification_status
-}
+                verification_status={inf.verification_status}
               />
 
               <div className="flex gap-2">
