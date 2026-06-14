@@ -5,113 +5,94 @@ import { useEffect, useState } from "react";
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [profileImage, setProfileImage] = useState("");
-  const [profileId, setProfileId] = useState<number | null>(null);
-  const [hasProfile, setHasProfile] = useState(false);
-const [completion, setCompletion] = useState(0);
-const [brandRequests, setBrandRequests] = useState(0);
-const [activeCampaigns, setActiveCampaigns] = useState(0);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
+  const [hasProfile, setHasProfile] = useState(false);
+  const [completion, setCompletion] = useState(0);
+
+  const [brandRequests, setBrandRequests] = useState(0);
+  const [activeCampaigns, setActiveCampaigns] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    console.log("storedUser:", storedUser);
 
-    if (
-      !storedUser ||
-      storedUser === "undefined" ||
-      storedUser === "null"
-    ) {
+    if (!storedUser || storedUser === "undefined") {
       localStorage.removeItem("user");
       window.location.href = "/login";
       return;
     }
 
-    try {
-      const parsedUser = JSON.parse(storedUser);
+    const parsedUser = JSON.parse(storedUser);
 
-      setUser(parsedUser);
+    console.log("LOGGED IN USER:", parsedUser);
 
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${parsedUser.email}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-       if (data.success && data.profile) {
-  setHasProfile(true);
+    setUser(parsedUser);
 
-  const profile = data.profile;
-const id = profile.id || profile.influencer_id || profile._id;
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${parsedUser.email}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.profile) {
+          setHasProfile(true);
 
-if (id) {
-  setProfileId(id);
-  fetchDashboardStats(id);
-}
+          const profile = data.profile;
 
-  if (profile.image) {
-    setProfileImage(profile.image);
-  }
+          console.log("PROFILE DATA:", profile);
 
-  let completed = 0;
+          // IMPORTANT: use user.id (UUID), NOT profile.id
+          const influencerId = parsedUser.id;
 
-  if (profile.name) completed++;
-  if (profile.category) completed++;
-  if (profile.city) completed++;
-  if (profile.followers_count) completed++;
-  if (profile.instagram) completed++;
-  if (profile.bio) completed++;
-  if (profile.image) completed++;
+          setProfileId(profile.id || null);
 
-  setCompletion(Math.round((completed / 7) * 100));
-}
-        })
-        .catch((err) =>
-          console.log("Profile fetch error:", err)
-        );
-    } catch (error) {
-      console.log("Invalid user:", error);
+          fetchDashboardStats(influencerId);
 
-      localStorage.removeItem("user");
+          if (profile.image) {
+            setProfileImage(profile.image);
+          }
 
-      window.location.href = "/login";
-    }
+          let completed = 0;
+
+          if (profile.name) completed++;
+          if (profile.category) completed++;
+          if (profile.city) completed++;
+          if (profile.followers_count) completed++;
+          if (profile.instagram) completed++;
+          if (profile.bio) completed++;
+          if (profile.image) completed++;
+
+          setCompletion(Math.round((completed / 7) * 100));
+        }
+      })
+      .catch((err) => console.log(err));
   }, []);
 
-  const fetchDashboardStats = async (
-  influencerId: number
-) => {
-  try {
+  const fetchDashboardStats = async (influencerId: string) => {
+    try {
+      console.log("FETCHING STATS FOR:", influencerId);
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
-    );
-
-    const data =
-      await response.json();
-
-    const requests =
-      data.invitations || [];
-
-    setBrandRequests(
-      requests.length
-    );
-
-    const accepted =
-      requests.filter(
-        (request: any) =>
-          request.status === "Accepted"
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
       );
 
-    setActiveCampaigns(
-      accepted.length
-    );
+      const data = await response.json();
 
-  } catch (error) {
+      console.log("INVITATIONS API RESPONSE:", data);
 
-    console.log(error);
+      const requests = data.invitations || [];
 
-  }
-};
+      setBrandRequests(requests.length);
 
+      const accepted = requests.filter(
+        (r: any) =>
+          r.status?.toLowerCase().trim() === "accepted"
+      );
+
+      setActiveCampaigns(accepted.length);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -124,9 +105,7 @@ if (id) {
       <div className="max-w-6xl mx-auto">
 
         {/* HEADER */}
-
         <div className="bg-white rounded-3xl shadow-xl p-10 mb-10">
-
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
 
             <div className="flex items-center gap-6">
@@ -136,203 +115,84 @@ if (id) {
                   profileImage ||
                   "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 }
-                alt="Profile"
                 className="w-28 h-28 rounded-full object-cover border-4 border-pink-500"
               />
 
               <div>
-
                 <h1 className="text-3xl md:text-5xl font-bold mb-2">
                   Welcome Back 👋
                 </h1>
 
-                <p className="text-gray-500 text-lg mb-3">
-                  {user?.role === "brand"
-                    ? "Manage your brand account"
-                    : "Manage your influencer account"}
-                </p>
-
                 {user && (
-                  <div className="space-y-1">
-
-                    <p className="text-lg">
-                      <span className="font-semibold">
-                        Name:
-                      </span>{" "}
-                      {user.name}
-                    </p>
-
-                    <p className="text-lg">
-                      <span className="font-semibold">
-                        Email:
-                      </span>{" "}
-                      {user.email}
-                    </p>
-
-                    <p className="text-lg">
-                      <span className="font-semibold">
-                        Role:
-                      </span>{" "}
-                      {user.role}
-                    </p>
-
+                  <div>
+                    <p>Name: {user.name}</p>
+                    <p>Email: {user.email}</p>
+                    <p>Role: {user.role}</p>
                   </div>
                 )}
-
               </div>
 
             </div>
 
             <button
               onClick={handleLogout}
-              className="bg-red-500 text-white px-8 py-4 rounded-2xl font-semibold hover:scale-105 transition"
+              className="bg-red-500 text-white px-8 py-4 rounded-2xl"
             >
               Logout
             </button>
 
           </div>
-
         </div>
 
         {/* STATS */}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
 
-          <div className="bg-black text-white rounded-3xl p-8 shadow-lg">
-
-            <h2 className="text-5xl font-bold mb-3">
-              12K
-            </h2>
-
-            <p className="text-gray-300 text-lg">
-              Profile Views
-            </p>
-
+          <div className="bg-pink-600 text-white p-8 rounded-3xl">
+            <h2 className="text-5xl font-bold">{brandRequests}</h2>
+            <p>Brand Requests</p>
           </div>
 
-          <div className="bg-pink-600 text-white rounded-3xl p-8 shadow-lg">
-
-            <h2 className="text-5xl font-bold mb-3">
-  {brandRequests}
-</h2>
-
-            <p className="text-pink-100 text-lg">
-              Brand Requests
-            </p>
-
-          </div>
-
-          <div className="bg-blue-600 text-white rounded-3xl p-8 shadow-lg">
-
-            <h2 className="text-5xl font-bold mb-3">
-  {activeCampaigns}
-</h2>
-
-            <p className="text-blue-100 text-lg">
-              Active Campaigns
-            </p>
-
+          <div className="bg-blue-600 text-white p-8 rounded-3xl">
+            <h2 className="text-5xl font-bold">{activeCampaigns}</h2>
+            <p>Active Campaigns</p>
           </div>
 
         </div>
 
-        {/* ACTION CARDS */}
+        {/* PROFILE PROGRESS */}
+        <div className="bg-white p-8 rounded-3xl mb-10">
 
-        <div className="bg-white rounded-3xl p-8 shadow-xl mb-10">
+          <div className="flex justify-between">
+            <h2 className="text-2xl font-bold">Profile Completion</h2>
+            <span>{completion}%</span>
+          </div>
 
-  <div className="flex justify-between items-center mb-4">
+          <div className="w-full bg-gray-200 h-4 rounded-full mt-4">
+            <div
+              className="bg-pink-600 h-4 rounded-full"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
 
-    <h2 className="text-3xl font-bold">
-      Profile Completion
-    </h2>
+        </div>
 
-    <span className="text-2xl font-bold text-pink-600">
-      {completion}%
-    </span>
-
-  </div>
-
-  <div className="w-full bg-gray-200 rounded-full h-5">
-
-    <div
-      className="bg-pink-600 h-5 rounded-full transition-all duration-500"
-      style={{
-        width: `${completion}%`,
-      }}
-    />
-
-  </div>
-
-  <p className="text-gray-500 mt-4">
-    Complete your profile to attract more brands.
-  </p>
-
-</div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {/* ACTIONS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {!hasProfile && (
-
-            <a
-              href="/create-profile"
-              className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-            >
-              <h2 className="text-3xl font-bold mb-4">
-                Create Profile
-              </h2>
-
-              <p className="text-gray-500">
-                Create your influencer profile
-              </p>
-
+            <a href="/create-profile" className="bg-white p-6 rounded-3xl">
+              Create Profile
             </a>
-
           )}
 
           {hasProfile && (
-
-            <a
-              href={`/influencers/${profileId}`}
-              className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-            >
-              <h2 className="text-3xl font-bold mb-4">
-                View My Profile
-              </h2>
-
-              <p className="text-gray-500">
-                View your public influencer profile
-              </p>
-
+            <a href={`/influencers/${profileId}`} className="bg-white p-6 rounded-3xl">
+              View Profile
             </a>
-
           )}
 
-          <a
-            href="/dashboard/profile"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          >
-            <h2 className="text-3xl font-bold mb-4">
-              Edit Profile
-            </h2>
-
-            <p className="text-gray-500">
-              Update your influencer details
-            </p>
-
-          </a>
-
-          <a
-            href="/influencers"
-            className="bg-white rounded-3xl p-8 shadow-lg hover:-translate-y-2 transition"
-          >
-            <h2 className="text-3xl font-bold mb-4">
-              View Influencers
-            </h2>
-
-            <p className="text-gray-500">
-              Explore all influencers
-            </p>
-
+          <a href="/dashboard/profile" className="bg-white p-6 rounded-3xl">
+            Edit Profile
           </a>
 
         </div>

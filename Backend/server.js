@@ -1528,7 +1528,7 @@ app.post(
         SELECT *
         FROM requests
         WHERE campaign_id = $1
-        AND LOWER(status) = 'accepted'
+        AND LOWER(deal_status) = 'accepted'
         LIMIT 1
         `,
         [id]
