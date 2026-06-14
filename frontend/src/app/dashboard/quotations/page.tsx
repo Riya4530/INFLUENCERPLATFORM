@@ -13,35 +13,29 @@ export default function QuotationsPage() {
 
   }, []);
 
- const fetchRequests = async () => {
+const fetchRequests = async () => {
   try {
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
 
-    const user = JSON.parse(
-      localStorage.getItem("user") || "{}"
+    console.log("USER FROM STORAGE:", user);
+
+    if (!user?.id) {
+      console.log("NO USER ID FOUND");
+      return;
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${user.id}`
     );
 
-    const response =
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${user.id}`
-      );
+    const data = await response.json();
 
-    const data =
-      await response.json();
+    console.log("API RESPONSE:", data);
 
-   const acceptedRequests =
-  (data.invitations || []).filter((item: any) => {
-    const status = item.status || item.deal_status || "";
-    return status.toLowerCase().trim() === "accepted";
-  });
-
-    setRequests(
-      acceptedRequests
-    );
-
+    setRequests(data.invitations || []);
   } catch (error) {
-
     console.log(error);
-
   }
 };
   const submitQuote = async (

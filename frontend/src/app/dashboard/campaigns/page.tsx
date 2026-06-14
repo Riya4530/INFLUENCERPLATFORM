@@ -5,11 +5,14 @@ import { useEffect, useState } from "react";
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
 
+  // -----------------------------
+  // FETCH CAMPAIGNS (ACCEPTED ONLY)
+  // -----------------------------
   const fetchCampaigns = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-      const influencerId =user.id;
+      const influencerId = user.id;
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
@@ -18,11 +21,10 @@ export default function CampaignsPage() {
       const data = await response.json();
 
       const activeCampaigns = (data.invitations || []).filter(
-  (item: any) =>
-    item.deal_status === "Accepted"
-);
+        (item: any) => item.deal_status === "Accepted"
+      );
 
-setCampaigns(activeCampaigns);
+      setCampaigns(activeCampaigns);
     } catch (error) {
       console.log(error);
     }
@@ -32,6 +34,9 @@ setCampaigns(activeCampaigns);
     fetchCampaigns();
   }, []);
 
+  // -----------------------------
+  // MARK COMPLETED
+  // -----------------------------
   const markCompleted = async (id: number) => {
     try {
       await fetch(
@@ -41,12 +46,9 @@ setCampaigns(activeCampaigns);
         }
       );
 
-      // ✅ Instant UI update (no refetch needed)
       setCampaigns((prev) =>
         prev.map((c) =>
-          c.id === id
-            ? { ...c, status: "Completed" }
-            : c
+          c.id === id ? { ...c, status: "Completed" } : c
         )
       );
     } catch (error) {
@@ -54,10 +56,13 @@ setCampaigns(activeCampaigns);
     }
   };
 
-  const generateInvoice = async (id: number) => {
+  // -----------------------------
+  // GENERATE INVOICE (FIXED)
+  // -----------------------------
+  const generateInvoice = async (campaignId: number) => {
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${id}/generate-invoice`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaignId}/generate-invoice`,
         {
           method: "POST",
         }
@@ -83,8 +88,8 @@ setCampaigns(activeCampaigns);
         <div className="space-y-6">
           {campaigns.map((campaign) => (
             <div
-            key={`${campaign.id}-${campaign.brand_id}`} 
-            className="bg-white p-8 rounded-3xl shadow-sm"
+              key={`${campaign.id}-${campaign.brand_id}`}
+              className="bg-white p-8 rounded-3xl shadow-sm"
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -101,7 +106,6 @@ setCampaigns(activeCampaigns);
                   </p>
                 </div>
 
-                {/* Status Badge */}
                 <div className="flex flex-col items-end gap-3">
                   <span
                     className={`px-4 py-2 rounded-full ${
@@ -115,13 +119,10 @@ setCampaigns(activeCampaigns);
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-4 mt-6">
                 {campaign.status !== "Completed" && (
                   <button
-                    onClick={() =>
-                      markCompleted(campaign.id)
-                    }
+                    onClick={() => markCompleted(campaign.id)}
                     className="bg-black text-white px-6 py-3 rounded-xl"
                   >
                     Mark Completed
@@ -131,7 +132,7 @@ setCampaigns(activeCampaigns);
                 {campaign.status === "Completed" && (
                   <button
                     onClick={() =>
-                      generateInvoice(campaign.id)
+                      generateInvoice(campaign.campaign_id)
                     }
                     className="bg-green-600 text-white px-6 py-3 rounded-xl"
                   >
