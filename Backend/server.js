@@ -1538,15 +1538,16 @@ app.post(
       );
 
       // 4. Get influencer
-      const influencerResult = await pool.query(
-        `
-        SELECT *
-        FROM influencer_profiles
-        WHERE id = $1
-        `,
-        [request.influencer_id]
-      );
-
+const influencerResult = await pool.query(
+  `
+  SELECT *
+  FROM influencer_profiles
+  WHERE user_email = (
+    SELECT email FROM users WHERE id = $1
+  )
+  `,
+  [request.influencer_id]
+);
       if (
         brandResult.rows.length === 0 ||
         influencerResult.rows.length === 0
