@@ -28,11 +28,11 @@ export default function QuotationsPage() {
     const data =
       await response.json();
 
-    const acceptedRequests =
-      (data.invitations || []).filter(
-        (item: any) =>
-          item.status === "Accepted"
-      );
+   const acceptedRequests =
+  (data.invitations || []).filter((item: any) => {
+    const status = item.status || item.deal_status || "";
+    return status.toLowerCase().trim() === "accepted";
+  });
 
     setRequests(
       acceptedRequests

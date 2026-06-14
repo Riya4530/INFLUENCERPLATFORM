@@ -1483,6 +1483,18 @@ app.put("/api/campaigns/:id/complete", async (req, res) => {
 });
   }
 });
+// =========================
+// TEST ROUTE (VERIFY DEPLOYMENT)
+// =========================
+app.get("/api/ping-invoice", (req, res) => {
+  console.log("🔥 PING INVOICE HIT");
+  res.json({ ok: true, message: "invoice backend working" });
+});
+
+
+// =========================
+// GENERATE INVOICE (MAIN)
+// =========================
 app.post(
   "/api/campaigns/:id/generate-invoice",
   async (req, res) => {
@@ -1510,7 +1522,7 @@ app.post(
 
       const campaign = campaignResult.rows[0];
 
-      // 2. Get accepted request (FIXED CASE ISSUE)
+      // 2. Get accepted request
       const requestResult = await pool.query(
         `
         SELECT *
@@ -1521,8 +1533,6 @@ app.post(
         `,
         [id]
       );
-
-      console.log("📦 REQUEST FOUND:", requestResult.rows);
 
       if (requestResult.rows.length === 0) {
         return res.status(404).json({
@@ -1543,7 +1553,7 @@ app.post(
         [request.brand_id]
       );
 
-      // 4. Get influencer (FIXED: safer check)
+      // 4. Get influencer
       const influencerResult = await pool.query(
         `
         SELECT *
@@ -1566,7 +1576,7 @@ app.post(
       const brand = brandResult.rows[0];
       const influencer = influencerResult.rows[0];
 
-      // 5. Amount calculation
+      // 5. Calculate invoice
       const amount = Number(request.quotation_amount || 0);
       const gst = amount * 0.18;
       const total = amount + gst;
@@ -1580,7 +1590,7 @@ app.post(
         total,
       });
 
-      // 6. INSERT invoice (FIXED: RETURNING added)
+      // 6. Insert invoice (IMPORTANT FIX)
       const invoiceResult = await pool.query(
         `
         INSERT INTO invoices
@@ -1620,7 +1630,7 @@ app.post(
 
       return res.status(500).json({
         success: false,
-        message: "Something went wrong",
+        message: "Server error",
         error: error.message,
       });
     }
