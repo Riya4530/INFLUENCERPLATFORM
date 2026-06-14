@@ -94,7 +94,16 @@ export default function BrandLayout({
           >
             Quotations
           </Link>
-
+<Link
+            href="/brand/invoices"
+            className={`block p-4 rounded-xl ${
+              pathname === "/brand/invoices"
+                ? "bg-white text-black"
+                : "hover:bg-gray-900"
+            }`}
+          >
+            Invoices
+          </Link>
           <Link
             href="/brand/collaborations"
             className={`block p-4 rounded-xl ${

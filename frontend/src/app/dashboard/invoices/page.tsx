@@ -13,7 +13,7 @@ export default function InvoicesPage() {
       console.log("USER:", user); // debug
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${user.email}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/influencer/${user.email}`
       );
 
       const data = await response.json();
