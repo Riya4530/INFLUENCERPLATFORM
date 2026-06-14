@@ -815,57 +815,41 @@ app.post(
   }
 );
 
+app.get("/api/invitations/:influencerId", async (req, res) => {
+  try {
+    const { influencerId } = req.params;
 
-app.get(
-  "/api/invitations/:influencerId",
-  async (req, res) => {
+    console.log("INFLUENCER (USER) ID:", influencerId);
 
-    try {
+    const result = await pool.query(
+      `
+      SELECT
+        requests.*,
+        campaigns.title,
+        campaigns.budget,
+        campaigns.category,
+        campaigns.description
+      FROM requests
+      LEFT JOIN campaigns
+        ON campaigns.id = requests.campaign_id
+      WHERE requests.influencer_id = $1
+      ORDER BY requests.created_at DESC
+      `,
+      [influencerId]
+    );
 
-      const { influencerId } =
-        req.params;
-console.log("REQUESTED INFLUENCER ID:", influencerId);
-      const result =
-        await pool.query(
-          `
-          SELECT
-            requests.*,
-            campaigns.title,
-            campaigns.budget,
-            campaigns.category,
-            campaigns.description
+    console.log("FOUND REQUESTS:", result.rows);
 
-          FROM requests
+    return res.json({
+      success: true,
+      invitations: result.rows,
+    });
 
-          LEFT JOIN campaigns
-            ON campaigns.id =
-               requests.campaign_id::integer
-
-          WHERE requests.influencer_id = $1
-
-          ORDER BY requests.created_at DESC
-          `,
-          [influencerId]
-        );
-console.log(result.rows);
-      res.json({
-        success: true,
-        invitations:
-          result.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false });
   }
-);
+});
 
 
 

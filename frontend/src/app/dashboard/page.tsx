@@ -45,7 +45,7 @@ export default function DashboardPage() {
 
           setProfileId(profile.id || null);
 
-          fetchDashboardStats(influencerId);
+     fetchDashboardStats(parsedUser.id);
 
           if (profile.image) {
             setProfileImage(profile.image);
@@ -66,34 +66,30 @@ export default function DashboardPage() {
       })
       .catch((err) => console.log(err));
   }, []);
+const fetchDashboardStats = async (userId: string) => {
+  try {
+    console.log("FETCHING FOR USER ID:", userId);
 
-  const fetchDashboardStats = async (influencerId: string) => {
-    try {
-      console.log("FETCHING STATS FOR:", influencerId);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${userId}`
+    );
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
-      );
+    const data = await response.json();
 
-      const data = await response.json();
+    const requests = data.invitations || [];
 
-      console.log("INVITATIONS API RESPONSE:", data);
+    setBrandRequests(requests.length);
 
-      const requests = data.invitations || [];
+    const accepted = requests.filter(
+      (r: any) => r.status === "Accepted"
+    );
 
-      setBrandRequests(requests.length);
+    setActiveCampaigns(accepted.length);
 
-      const accepted = requests.filter(
-        (r: any) =>
-          r.status?.toLowerCase().trim() === "accepted"
-      );
-
-      setActiveCampaigns(accepted.length);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
+  } catch (error) {
+    console.log(error);
+  }
+};
   const handleLogout = () => {
     localStorage.removeItem("user");
     window.location.href = "/login";
