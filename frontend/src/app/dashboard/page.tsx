@@ -40,9 +40,12 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
   setHasProfile(true);
 
   const profile = data.profile;
-  fetchDashboardStats(profile.id);
+const id = profile.id || profile.influencer_id || profile._id;
 
-  setProfileId(profile.id);
+if (id) {
+  setProfileId(id);
+  fetchDashboardStats(id);
+}
 
   if (profile.image) {
     setProfileImage(profile.image);
@@ -53,7 +56,7 @@ const [activeCampaigns, setActiveCampaigns] = useState(0);
   if (profile.name) completed++;
   if (profile.category) completed++;
   if (profile.city) completed++;
-  if (profile.followers) completed++;
+  if (profile.followers_count) completed++;
   if (profile.instagram) completed++;
   if (profile.bio) completed++;
   if (profile.image) completed++;
