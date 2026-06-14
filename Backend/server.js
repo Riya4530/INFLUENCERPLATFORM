@@ -632,40 +632,7 @@ app.get(
 
   }
 );
-app.get(
-  "/api/influencers/city/:city",
-  async (req, res) => {
 
-    try {
-
-      const { city } = req.params;
-
-      const result = await pool.query(
-        `
-        SELECT *
-        FROM influencer_profiles
-        WHERE LOWER(city) = LOWER($1)
-        `,
-        [city]
-      );
-
-      res.json({
-        success: true,
-        influencers: result.rows,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false,
-      });
-
-    }
-
-  }
-);
 
 /* =========================
    GET PROFILE BY EMAIL

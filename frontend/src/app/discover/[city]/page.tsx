@@ -25,7 +25,7 @@ export async function generateMetadata(
 
     alternates: {
       canonical:
-        `https://www.influencerconnect.com/discover/${city}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/discover/${city}`,
     },
   };
 }

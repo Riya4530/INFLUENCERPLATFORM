@@ -30,7 +30,7 @@ export async function generateMetadata(
 
     alternates: {
       canonical:
-        `https://www.influencerconnect.com/discover/${city}/${category}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/discover/${city}/${category}`,
     },
 
     openGraph: {
@@ -41,7 +41,7 @@ export async function generateMetadata(
         `Find top ${formattedCategory} influencers in ${formattedCity}.`,
 
       url:
-        `https://www.influencerconnect.com/discover/${city}/${category}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/discover/${city}/${category}`,
     },
   };
 }
@@ -53,7 +53,7 @@ export default async function CityCategoryPage(
   const { city, category } = await params;
 
   const response = await fetch(
-    `https://www.influencerconnect.com/api/influencers/city/${city}/category/${category}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/influencers/city/${city}/category/${category}`,
     {
       cache: "no-store",
     }
@@ -72,7 +72,7 @@ export default async function CityCategoryPage(
     description:
       `Find top ${category} influencers in ${city}`,
     url:
-      `https://www.influencerconnect.com/discover/${city}/${category}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/discover/${city}/${category}`,
   };
 
   return (
