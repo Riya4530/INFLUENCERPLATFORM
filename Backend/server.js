@@ -739,7 +739,8 @@ app.put(
         instagram,
         image,
       } = req.body;
-
+console.log("REQ BODY:", req.body);
+console.log("followers_count:", followers_count);
       await pool.query(
         `
         UPDATE influencer_profiles
