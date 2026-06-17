@@ -512,46 +512,78 @@ app.get(
 
   }
 );
-app.get(
-  "/api/seo/influencer/:id",
-  async (req, res) => {
+app.get("/api/influencers", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM influencer_profiles
+      ORDER BY created_at DESC
+    `);
 
-    try {
+    return res.json({
+      success: true,
+      influencers: result.rows,
+    });
 
-      const { id } = req.params;
+  } catch (error) {
+    console.log(error);
 
-      const result = await pool.query(
-        `
-        SELECT *
-        FROM influencer_profiles
-        WHERE id = $1
-        `,
-        [id]
-      );
+    res.status(500).json({
+      success: false,
+      influencers: [],
+    });
+  }
+});
+app.get("/api/seo/influencer/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false
-        });
-      }
+    console.log("🔥 SEO Influencer fetch by user id:", id);
 
-      res.json({
-        success: true,
-        influencer: result.rows[0]
+    const result = await pool.query(
+      `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+
+        i.id AS profile_id,
+        i.category,
+        i.city,
+        i.bio,
+        i.instagram,
+        i.image,
+        i.followers_count
+
+      FROM users u
+      LEFT JOIN influencer_profiles i
+        ON i.user_id = u.id
+      WHERE u.id = $1 AND u.role = 'influencer'
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Influencer not found",
       });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
     }
 
+    return res.json({
+      success: true,
+      influencer: result.rows[0],
+    });
+
+  } catch (error) {
+    console.log("❌ SEO API error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
-);
+});
 /* =========================
    INFLUENCERS BY CITY + CATEGORY
 ========================= */

@@ -129,7 +129,7 @@ const handleFavourite = (
 
         {instagram && (
           <p className="text-gray-500 text-sm truncate">
-            @{instagram}
+            {instagram}
           </p>
         )}
 
