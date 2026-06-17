@@ -148,7 +148,7 @@ export default function CreateCampaign() {
             </label>
 
             <input
-              type="text"
+              type="number"
               value={budget}
               onChange={(e) =>
                 setBudget(e.target.value)

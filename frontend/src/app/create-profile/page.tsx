@@ -119,7 +119,7 @@ export default function CreateProfilePage() {
           name,
           category,
           city,
-          followers_count: followers,
+          followers_count: followers ? Number(followers) : null,
           bio,
           instagram,
           image,
@@ -219,7 +219,7 @@ export default function CreateProfilePage() {
           <div>
             <label className="block mb-3 font-semibold">Followers</label>
             <input
-              type="text"
+              type="number"
               value={followers}
               onChange={(e) => setFollowers(e.target.value)}
               className="w-full border border-gray-300 rounded-2xl px-5 py-4"
