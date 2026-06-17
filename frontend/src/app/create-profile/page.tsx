@@ -103,6 +103,17 @@ export default function CreateProfilePage() {
     e.preventDefault();
 
     try {
+      console.log("followers:", followers);
+      console.log({
+  user_email: email,
+  name,
+  category,
+  city,
+  followers_count: followers,
+  bio,
+  instagram,
+  image,
+});
       const url = profileExists
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/update-profile/${email}`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/create-profile`;
