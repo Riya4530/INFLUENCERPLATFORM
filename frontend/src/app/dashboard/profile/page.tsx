@@ -116,7 +116,7 @@ export default function ProfileSettingsPage() {
             name,
             category,
             city,
-            followers,
+            followers_count: followers ? Number(followers) : null,
             instagram,
             image,
             bio,

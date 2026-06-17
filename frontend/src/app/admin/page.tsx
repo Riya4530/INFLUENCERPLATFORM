@@ -355,7 +355,7 @@ export default function AdminPage() {
                       </td>
 
                       <td>
-                        {item.followers}
+                        {item.followers_count}
                       </td>
 
                     </tr>
