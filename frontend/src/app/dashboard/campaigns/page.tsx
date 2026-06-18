@@ -59,10 +59,10 @@ export default function CampaignsPage() {
   // -----------------------------
   // GENERATE INVOICE (FIXED)
   // -----------------------------
-  const generateInvoice = async (campaignId: number) => {
+  const generateInvoice = async (requestId: number) => {
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaignId}/generate-invoice`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}/generate-invoice`,
         {
           method: "POST",
         }
@@ -132,7 +132,7 @@ export default function CampaignsPage() {
                 {campaign.status === "Completed" && (
                   <button
                     onClick={() =>
-                      generateInvoice(campaign.campaign_id)
+                      generateInvoice(campaign.id)
                     }
                     className="bg-green-600 text-white px-6 py-3 rounded-xl"
                   >
