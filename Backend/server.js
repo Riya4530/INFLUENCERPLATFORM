@@ -1540,11 +1540,17 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
       [request.brand_id]
     );
 
-    const influencerResult = await pool.query(
-      `SELECT * FROM influencer_profiles WHERE id = $1`,
-      [request.influencer_id]
-    );
+  const influencerUserResult = await pool.query(
+  `SELECT * FROM users WHERE id = $1`,
+  [request.influencer_id]
+);
 
+const influencerUser = influencerUserResult.rows[0];
+
+const influencerResult = await pool.query(
+  `SELECT * FROM influencer_profiles WHERE user_email = $1`,
+  [influencerUser.email]
+);
     const campaign = campaignResult.rows[0];
     const brand = brandResult.rows[0];
     const influencer = influencerResult.rows[0];
