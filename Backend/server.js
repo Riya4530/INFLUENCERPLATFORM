@@ -5,7 +5,7 @@ require("dotenv").config();
 const cloudinary = require("./cloudinary");
 require("dotenv").config();
 const { Pool } = require("pg");
-
+const PDFDocument = require("pdfkit");
 const app = express();
 
 const pool = new Pool({
@@ -1575,10 +1575,45 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
       ]
     );
 
-    res.json({
-      success: true,
-      invoice: invoice.rows[0],
-    });
+   const createdInvoice = invoice.rows[0];
+
+const doc = new PDFDocument();
+
+const buffers = [];
+
+doc.on("data", (chunk) => {
+  buffers.push(chunk);
+});
+
+doc.on("end", async () => {
+  const pdfBuffer = Buffer.concat(buffers);
+
+  console.log("PDF generated");
+  console.log("Size:", pdfBuffer.length);
+
+  res.json({
+    success: true,
+    invoice: createdInvoice,
+    pdfSize: pdfBuffer.length,
+  });
+});
+
+doc.fontSize(22).text("INVOICE", {
+  align: "center",
+});
+
+doc.moveDown();
+
+doc.fontSize(12).text(`Invoice ID: ${createdInvoice.id}`);
+doc.text(`Campaign: ${campaign.title}`);
+doc.text(`Brand: ${brand.email}`);
+doc.text(`Influencer: ${influencer.name}`);
+doc.text(`Amount: ₹${amount}`);
+doc.text(`GST: ₹${gst}`);
+doc.text(`Total: ₹${total}`);
+doc.text(`Status: Pending`);
+
+doc.end();
 
   } catch (err) {
     console.log(err);

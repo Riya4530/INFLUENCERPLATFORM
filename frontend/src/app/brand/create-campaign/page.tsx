@@ -61,6 +61,7 @@ export default function CreateCampaign() {
         await response.json();
 
       console.log(data);
+      
 
       if (data.success) {
 
@@ -70,7 +71,7 @@ export default function CreateCampaign() {
 
         setTitle("");
         setBudget("");
-        setCategory("Food");
+        setCategories(data.categories || []);
         setDescription("");
 
       } else {
