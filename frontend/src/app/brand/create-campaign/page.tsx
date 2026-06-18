@@ -1,42 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CreateCampaign() {
-
-  const [title, setTitle] =
-    useState("");
-
-  const [budget, setBudget] =
-    useState("");
-
-  const [category, setCategory] =
-    useState("");
+  const [title, setTitle] = useState("");
+  const [budget, setBudget] = useState("");
+  const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [description, setDescription] =
-    useState("");
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("CATEGORIES API:", data);
 
-  const [loading, setLoading] =
-    useState(false);
+        if (data.success) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.log(err));
+  }, []);
 
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
-
     e.preventDefault();
 
     try {
-
       setLoading(true);
 
       const user = JSON.parse(
         localStorage.getItem("user") || "{}"
-      );
-
-      console.log(
-        "Logged In User:",
-        user
       );
 
       const response = await fetch(
@@ -44,64 +40,46 @@ export default function CreateCampaign() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             brand_id: user.id,
             title,
-            budget,
+            budget: budget ? Number(budget) : null,
             category,
             description,
           }),
         }
       );
 
-      const data =
-        await response.json();
-
-      console.log(data);
-      
+      const data = await response.json();
 
       if (data.success) {
-
-        alert(
-          "Campaign created successfully!"
-        );
+        alert("Campaign created successfully!");
 
         setTitle("");
         setBudget("");
-        setCategories(data.categories || []);
+        setCategory("");
         setDescription("");
-
       } else {
-
         alert(
           data.message ||
           "Failed to create campaign"
         );
-
       }
-
     } catch (error) {
-
       console.log(error);
 
-      alert(
-        "Something went wrong"
-      );
-
+      alert("Something went wrong");
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
-  return (
+  console.log("Current categories:", categories);
 
-    <main className="min-h-screen bg-gray-100 p-10">
+  return (
+     <main className="min-h-screen bg-gray-100 p-10">
 
       <div className="max-w-4xl mx-auto bg-white p-10 rounded-3xl shadow-sm">
 
