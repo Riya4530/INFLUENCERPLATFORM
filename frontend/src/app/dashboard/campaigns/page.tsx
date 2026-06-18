@@ -132,7 +132,8 @@ export default function CampaignsPage() {
                 {campaign.status === "Completed" && (
                   <button
                     onClick={() =>
-                      generateInvoice(campaign.id)
+                      generateInvoice(campaign.
+                        id)
                     }
                     className="bg-green-600 text-white px-6 py-3 rounded-xl"
                   >

@@ -5,6 +5,7 @@ require("dotenv").config();
 const cloudinary = require("./cloudinary");
 require("dotenv").config();
 const { Pool } = require("pg");
+const streamifier = require("streamifier");
 const PDFDocument = require("pdfkit");
 const app = express();
 
@@ -1586,24 +1587,61 @@ const influencerResult = await pool.query(
 const doc = new PDFDocument();
 
 const buffers = [];
-
-doc.on("data", (chunk) => {
-  buffers.push(chunk);
-});
-
 doc.on("end", async () => {
-  const pdfBuffer = Buffer.concat(buffers);
+  try {
+    const pdfBuffer = Buffer.concat(buffers);
 
-  console.log("PDF generated");
-  console.log("Size:", pdfBuffer.length);
+    console.log("PDF generated");
+    console.log("Size:", pdfBuffer.length);
 
-  res.json({
-    success: true,
-    invoice: createdInvoice,
-    pdfSize: pdfBuffer.length,
-  });
+    const uploadResult = await new Promise(
+      (resolve, reject) => {
+        const uploadStream =
+          cloudinary.uploader.upload_stream(
+            {
+              resource_type: "raw",
+              folder: "invoices",
+              public_id: `invoice_${createdInvoice.id}`,
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+
+        streamifier
+          .createReadStream(pdfBuffer)
+          .pipe(uploadStream);
+      }
+    );
+
+    await pool.query(
+      `
+      UPDATE invoices
+      SET pdf_url = $1
+      WHERE id = $2
+      `,
+      [
+        uploadResult.secure_url,
+        createdInvoice.id,
+      ]
+    );
+
+    res.json({
+      success: true,
+      invoice: createdInvoice,
+      pdf_url: uploadResult.secure_url,
+    });
+
+  } catch (error) {
+    console.log("PDF Upload Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
-
 doc.fontSize(22).text("INVOICE", {
   align: "center",
 });
