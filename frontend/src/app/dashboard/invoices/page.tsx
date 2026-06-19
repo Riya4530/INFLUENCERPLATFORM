@@ -66,8 +66,6 @@ export default function InvoicesPage() {
               <th className="text-left p-4">Amount</th>
               <th className="text-left p-4">GST</th>
               <th className="text-left p-4">Total</th>
-              <th className="text-left p-4">Status</th>
-              <th className="text-left p-4">Action</th>
             </tr>
           </thead>
 
@@ -83,26 +81,26 @@ export default function InvoicesPage() {
                 </td>
 
                 <td className="p-4">
-                  <span
-                    className={`px-4 py-2 rounded-full text-sm ${
-                      invoice.status === "Paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {invoice.status}
-                  </span>
+                                    <a
+  href={invoice.pdf_url}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+>
+  View PDF
+</a>
+
                 </td>
 
                 <td className="p-4">
-                  {invoice.status !== "Paid" && (
-                    <button
-                      onClick={() => markPaid(invoice.id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700"
-                    >
-                      Mark Paid
-                    </button>
-                  )}
+
+<a
+  href={invoice.pdf_url}
+  download
+  className="bg-green-600 text-white px-4 py-2 rounded-lg ml-2"
+>
+  Download PDF
+</a>
                 </td>
               </tr>
             ))}
