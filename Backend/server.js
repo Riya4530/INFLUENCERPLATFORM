@@ -1587,6 +1587,10 @@ const influencerResult = await pool.query(
 const doc = new PDFDocument();
 
 const buffers = [];
+doc.on("data", (chunk) => {
+  buffers.push(chunk);
+});
+
 doc.on("end", async () => {
   try {
     const pdfBuffer = Buffer.concat(buffers);
