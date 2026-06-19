@@ -66,6 +66,7 @@ export default function InvoicesPage() {
               <th className="text-left p-4">Amount</th>
               <th className="text-left p-4">GST</th>
               <th className="text-left p-4">Total</th>
+              <th className="text-left p-4">Actions</th>
             </tr>
           </thead>
 
@@ -78,18 +79,6 @@ export default function InvoicesPage() {
                 <td className="p-4">₹{invoice.gst}</td>
                 <td className="p-4 font-semibold">
                   ₹{invoice.total}
-                </td>
-
-                <td className="p-4">
-                                    <a
-  href={invoice.pdf_url}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
->
-  View PDF
-</a>
-
                 </td>
 
                 <td className="p-4">

@@ -1563,7 +1563,7 @@ const influencerResult = await pool.query(
     const invoice = await pool.query(
       `INSERT INTO invoices
       (request_id, influencer_id, brand_id, campaign_id,
-       influencer_email, brand_email, campaign_name,
+       influencer_email, brand_email, client_name, campaign_name,
        amount, gst, total, status)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING *`,
@@ -1574,6 +1574,7 @@ const influencerResult = await pool.query(
         request.campaign_id,
         influencer.user_email,
         brand.email,
+        brand.name,
         campaign.title,
         amount,
         gst,
@@ -1605,7 +1606,7 @@ doc.on("end", async () => {
             {
               resource_type: "auto",
               folder: "invoices",
-              public_id: `invoice_${createdInvoice.id}.pdf`,
+              public_id: `invoice_${createdInvoice.id}`,
             },
             (error, result) => {
               if (error) reject(error);
