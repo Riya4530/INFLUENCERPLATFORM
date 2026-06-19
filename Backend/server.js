@@ -1565,7 +1565,7 @@ const influencerResult = await pool.query(
       (request_id, influencer_id, brand_id, campaign_id,
        influencer_email, brand_email, client_name, campaign_name,
        amount, gst, total, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       RETURNING *`,
       [
         request.id,
@@ -1654,13 +1654,18 @@ doc.fontSize(22).text("INVOICE", {
 doc.moveDown();
 
 doc.fontSize(12).text(`Invoice ID: ${createdInvoice.id}`);
+doc.text(`Client: ${brand.name || brand.email}`);
 doc.text(`Campaign: ${campaign.title}`);
-doc.text(`Brand: ${brand.email}`);
+
+doc.moveDown();
+
 doc.text(`Influencer: ${influencer.name}`);
+
+doc.moveDown();
+
 doc.text(`Amount: ₹${amount}`);
-doc.text(`GST: ₹${gst}`);
-doc.text(`Total: ₹${total}`);
-doc.text(`Status: Pending`);
+doc.text(`GST (18%): ₹${gst}`);
+doc.text(`Total Amount: ₹${total}`);
 
 doc.end();
 
