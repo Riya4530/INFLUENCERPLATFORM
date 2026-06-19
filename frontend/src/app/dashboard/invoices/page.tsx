@@ -85,10 +85,11 @@ export default function InvoicesPage() {
 
 <a
   href={invoice.pdf_url}
-  download
-  className="bg-green-600 text-white px-4 py-2 rounded-lg ml-2"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
 >
-  Download PDF
+  View PDF
 </a>
                 </td>
               </tr>
