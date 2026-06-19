@@ -1604,9 +1604,9 @@ doc.on("end", async () => {
         const uploadStream =
           cloudinary.uploader.upload_stream(
             {
-              resource_type: "auto",
+              resource_type: "raw",
               folder: "invoices",
-              public_id: `invoice_${createdInvoice.id}`,
+              public_id: `invoice_${createdInvoice.id}.pdf`,
             },
             (error, result) => {
               if (error) reject(error);

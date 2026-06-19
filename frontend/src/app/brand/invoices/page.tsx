@@ -11,7 +11,7 @@ export default function BrandInvoicesPage() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/brand/${user.id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/brand/${user.email}`
       );
 
       const data = await response.json();
