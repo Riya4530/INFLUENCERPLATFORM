@@ -230,38 +230,65 @@ export default function DashboardLayout({
           </div>
 
           {/* Bottom Profile + Logout */}
-          <div className="absolute bottom-0 left-0 w-full p-4 border-t border-gray-800">
+          <div className="absolute bottom-0 left-0 w-full border-t border-gray-800 p-4">
 
-            <div className="flex items-center gap-3 mb-4">
+  <Link
+    href="/dashboard/profile"
+    className="
+      flex items-center gap-3
+      p-3
+      rounded-xl
+      hover:bg-gray-900
+      transition
+      mb-4
+    "
+  >
 
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                alt="Profile"
-                className="w-12 h-12 rounded-full"
-              />
+    <img
+      src={
+        user?.image ||
+        "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+      }
+      alt="Profile"
+      className="
+        w-12 h-12
+        rounded-full
+        object-cover
+        border-2
+        border-gray-700
+      "
+    />
 
-              <div>
+    <div>
 
-                <p className="font-semibold">
-                  {user?.name || "Influencer"}
-                </p>
+      <p className="font-semibold">
+        {user?.name || "User"}
+      </p>
 
-                <p className="text-xs text-gray-400">
-                  Logged In
-                </p>
+      <p className="text-xs text-gray-400">
+        View Profile →
+      </p>
 
-              </div>
+    </div>
 
-            </div>
+  </Link>
 
-            <button
-              onClick={handleLogout}
-              className="w-full bg-red-500 hover:bg-red-600 py-3 rounded-xl font-semibold transition"
-            >
-              Logout
-            </button>
+  <button
+    onClick={handleLogout}
+    className="
+      w-full
+      bg-red-500
+      hover:bg-red-600
+      py-3
+      rounded-xl
+      font-semibold
+      transition
+    "
+  >
+    Logout
+  </button>
 
-          </div>
+</div>
 
         </aside>
 
