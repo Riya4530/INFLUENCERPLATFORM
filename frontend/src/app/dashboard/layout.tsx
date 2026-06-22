@@ -13,13 +13,15 @@ export default function DashboardLayout({
 
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-
+const [profileImage, setProfileImage] = useState("");
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setProfileImage(parsedUser.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png");
       } catch (error) {
         console.log(error);
       }
@@ -57,7 +59,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3">
 
             <img
-              src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+              src={profileImage || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
               alt="Profile"
               className="w-10 h-10 rounded-full object-cover border"
             />
@@ -246,7 +248,7 @@ export default function DashboardLayout({
 
     <img
       src={
-        user?.image ||
+       profileImage ||
         "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
       }
       alt="Profile"
