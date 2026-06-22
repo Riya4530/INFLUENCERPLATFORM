@@ -153,17 +153,6 @@ const [profileImage, setProfileImage] = useState("");
             </Link>
 
             <Link
-              href="/dashboard/profile"
-              className={`block p-4 rounded-xl transition ${
-                pathname === "/dashboard/profile"
-                  ? "bg-white text-black"
-                  : "hover:bg-gray-900"
-              }`}
-            >
-              My Profile
-            </Link>
-
-            <Link
               href="/dashboard/bookings"
               className={`block p-4 rounded-xl transition ${
                 pathname === "/dashboard/bookings"
