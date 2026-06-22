@@ -101,7 +101,7 @@ const fetchDashboardStats = async (userId: string) => {
     <div className="max-w-7xl mx-auto">
 
       {/* HERO SECTION */}
-      <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-700 text-white rounded-3xl p-8 md:p-10 shadow-xl mb-8">
+      <div className="bg-gradient-to-r from-black via-gray-900 to-gray-400 text-white rounded-3xl p-8 md:p-10 shadow-xl mb-8">
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
 

@@ -107,92 +107,128 @@ setConnectedInfluencers(
     );
   }
 
-  return (
-    <main className="min-h-screen bg-gray-100 p-10">
+ return (
+  <main className="space-y-8">
 
-      <div className="max-w-7xl mx-auto">
+    {/* HERO */}
+    <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-3xl p-10 shadow-xl">
 
-        {/* HEADER */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm mb-10">
+      <h1 className="text-4xl md:text-5xl font-bold mb-3">
+        Welcome, {user.name}! 👋
+      </h1>
 
-          <h1 className="text-5xl font-bold mb-3">
-            Welcome, {user.name} 👋
-          </h1>
+      <p className="text-slate-300 text-lg">
+        Manage campaigns and collaborate with influencers.
+      </p>
 
-          <p className="text-gray-500 text-lg">
-            Manage campaigns and discover influencers.
-          </p>
+    </div>
 
-        </div>
+    {/* STATS */}
+    <div className="grid md:grid-cols-3 gap-6">
 
-        {/* STATS */}
-        <div className="grid md:grid-cols-3 gap-6 mb-10">
+      <div className="bg-white rounded-3xl p-8 shadow-sm">
 
-          <div className="bg-white p-8 rounded-3xl shadow-sm">
-        <h2 className="text-4xl font-bold">
-  {campaignCount}
-</h2>
+        <h2 className="text-5xl font-bold text-slate-900">
+          {campaignCount}
+        </h2>
 
-            <p className="text-gray-500 mt-2">
-              Active Campaigns
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm">
-           <h2 className="text-4xl font-bold">
-  ₹{totalSpend.toLocaleString()}
-</h2>
-            <p className="text-gray-500 mt-2">
-              Total Spend
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm">
-           <h2 className="text-4xl font-bold">
-  {connectedInfluencers}
-</h2>
-            <p className="text-gray-500 mt-2">
-              Influencers Connected
-            </p>
-          </div>
-
-        </div>
-
-        {/* ACTION CARDS */}
-      
-
-<div className="grid md:grid-cols-2 gap-6">
-
-<a
-  href="/brand/favourites"
-  className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
->
-  <h2 className="text-2xl font-bold mb-3">
-    Favourite Influencers
-  </h2>
-
-  <p className="text-gray-500">
-    View your saved creators.
-  </p>
-</a>
-
-<a
-  href="/brand/recommendations"
-  className="bg-white p-8 rounded-3xl shadow-sm hover:shadow-lg transition"
->
-  <h2 className="text-2xl font-bold mb-3">
-    Recommendations
-  </h2>
-
-  <p className="text-gray-500">
-    Suggested influencers based on favourites.
-  </p>
-</a>
-
-        </div>
+        <p className="text-gray-500 mt-3">
+          Campaigns
+        </p>
 
       </div>
 
-    </main>
-  );
+      <div className="bg-white rounded-3xl p-8 shadow-sm">
+
+        <h2 className="text-5xl font-bold text-slate-900">
+          ₹{totalSpend.toLocaleString()}
+        </h2>
+
+        <p className="text-gray-500 mt-3">
+          Total Spend
+        </p>
+
+      </div>
+
+      <div className="bg-white rounded-3xl p-8 shadow-sm">
+
+        <h2 className="text-5xl font-bold text-slate-900">
+          {connectedInfluencers}
+        </h2>
+
+        <p className="text-gray-500 mt-3">
+          Connected Influencers
+        </p>
+
+      </div>
+
+    </div>
+
+    {/* QUICK ACTIONS */}
+    <div className="grid md:grid-cols-2 gap-6">
+
+      <a
+        href="/brand/favourites"
+        className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition"
+      >
+
+        <h2 className="text-2xl font-bold mb-2">
+          Favourite Influencers
+        </h2>
+
+        <p className="text-gray-500">
+          View creators you've saved.
+        </p>
+
+      </a>
+
+      <a
+        href="/brand/recommendations"
+        className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition"
+      >
+
+        <h2 className="text-2xl font-bold mb-2">
+          Recommendations
+        </h2>
+
+        <p className="text-gray-500">
+          Discover new influencer matches.
+        </p>
+
+      </a>
+
+      <a
+        href="/brand/create-campaign"
+        className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition"
+      >
+
+        <h2 className="text-2xl font-bold mb-2">
+          Create Campaign
+        </h2>
+
+        <p className="text-gray-500">
+          Launch a new marketing campaign.
+        </p>
+
+      </a>
+
+      <a
+        href="/brand/influencers"
+        className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition"
+      >
+
+        <h2 className="text-2xl font-bold mb-2">
+          Find Influencers
+        </h2>
+
+        <p className="text-gray-500">
+          Search creators by category.
+        </p>
+
+      </a>
+
+    </div>
+
+  </main>
+);
 }
