@@ -214,7 +214,7 @@ const fetchDashboardStats = async (userId: string) => {
         <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
 
           <div
-            className="h-4 bg-gradient-to-r from-pink-500 to-purple-600"
+            className="h-4 bg-gradient-to-r from-black-500 to-gray-600"
             style={{
               width: `${completion}%`,
             }}

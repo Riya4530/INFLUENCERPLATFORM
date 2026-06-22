@@ -111,7 +111,7 @@ setConnectedInfluencers(
   <main className="space-y-8">
 
     {/* HERO */}
-    <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-3xl p-10 shadow-xl">
+      <div className="bg-gradient-to-r from-black via-gray-900 to-gray-400 text-white rounded-3xl p-8 md:p-10 shadow-xl mb-8">
 
       <h1 className="text-4xl md:text-5xl font-bold mb-3">
         Welcome, {user.name}! 👋

@@ -133,324 +133,208 @@ export default function AdminPage() {
   }
 
   return (
+  <main className="min-h-screen">
 
-    <div className="min-h-screen flex bg-gray-100">
+    {/* HERO */}
+     <div className="bg-gradient-to-r from-black via-gray-900 to-gray-400 text-white rounded-3xl p-8 md:p-10 shadow-xl mb-8">
 
+  
+      <h1 className="text-4xl font-bold mb-2">
+        Welcome Back Admin 👋
+      </h1>
 
-      {/* MAIN */}
+      <p className="text-slate-300">
+        Monitor users, influencers and platform activity.
+      </p>
 
-      <main className="flex-1 p-10 overflow-y-auto">
+    </div>
 
-        <div className="flex justify-between items-center mb-10">
+    {/* STATS */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
-          <div>
+      <div className="bg-white rounded-3xl p-8 shadow-sm border">
 
-            <h1 className="text-4xl font-bold">
-              Admin Dashboard
-            </h1>
+        <p className="text-gray-500 mb-2">
+          Total Influencers
+        </p>
 
-            <p className="text-gray-500">
-              Manage influencers and platform activity
-            </p>
+        <h2 className="text-5xl font-bold">
+          {influencers.length}
+        </h2>
 
-          </div>
+      </div>
+
+      <div className="bg-white rounded-3xl p-8 shadow-sm border">
+
+        <p className="text-gray-500 mb-2">
+          Contact Messages
+        </p>
+
+        <h2 className="text-5xl font-bold">
+          {messages.length}
+        </h2>
+
+      </div>
+
+      <div className="bg-white rounded-3xl p-8 shadow-sm border">
+
+        <p className="text-gray-500 mb-2">
+          Total Records
+        </p>
+
+        <h2 className="text-5xl font-bold">
+          {influencers.length + messages.length}
+        </h2>
+
+      </div>
+
+    </div>
+
+    {/* QUICK ACTIONS */}
+    <div className="grid md:grid-cols-3 gap-6 mb-8">
+
+      <a
+        href="/admin/users"
+        className="bg-white rounded-3xl p-8 border shadow-sm hover:shadow-lg transition"
+      >
+        <h2 className="text-xl font-bold mb-2">
+          Manage Users
+        </h2>
+
+        <p className="text-gray-500">
+          View all registered users.
+        </p>
+      </a>
+
+      <a
+        href="/admin/verification"
+        className="bg-white rounded-3xl p-8 border shadow-sm hover:shadow-lg transition"
+      >
+        <h2 className="text-xl font-bold mb-2">
+          Verification Requests
+        </h2>
+
+        <p className="text-gray-500">
+          Approve influencer accounts.
+        </p>
+      </a>
+
+      <a
+        href="/admin/categories"
+        className="bg-white rounded-3xl p-8 border shadow-sm hover:shadow-lg transition"
+      >
+        <h2 className="text-xl font-bold mb-2">
+          Categories
+        </h2>
+
+        <p className="text-gray-500">
+          Manage platform categories.
+        </p>
+      </a>
+
+    </div>
+
+    {/* RECENT DATA */}
+    <div className="grid lg:grid-cols-2 gap-8">
+
+      {/* Influencers */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border">
+
+        <div className="flex justify-between items-center mb-6">
+
+          <h2 className="text-2xl font-bold">
+            Latest Influencers
+          </h2>
+
+          <span className="text-gray-500">
+            {influencers.length}
+          </span>
 
         </div>
 
-        {activeSection === "dashboard" && (
+        <div className="space-y-4">
 
-          <>
+          {influencers.slice(0, 5).map((item) => (
 
-            <div className="bg-gradient-to-r from-black to-gray-800 text-white rounded-3xl p-10 mb-10 shadow-xl">
+            <div
+              key={item.id}
+              className="flex items-center gap-4 border-b pb-4"
+            >
 
-              <h2 className="text-4xl font-bold mb-3">
-                Welcome Back Admin 👋
-              </h2>
+              <img
+                src={
+                  item.image ||
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                }
+                className="w-12 h-12 rounded-full object-cover"
+              />
 
-              <p className="text-gray-300 text-lg">
-                Monitor creators, messages and platform growth.
+              <div>
+
+                <p className="font-semibold">
+                  {item.name}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  {item.category}
+                </p>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* Messages */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border">
+
+        <div className="flex justify-between items-center mb-6">
+
+          <h2 className="text-2xl font-bold">
+            Recent Messages
+          </h2>
+
+          <span className="text-gray-500">
+            {messages.length}
+          </span>
+
+        </div>
+
+        <div className="space-y-4">
+
+          {messages.slice(0, 5).map((msg) => (
+
+            <div
+              key={msg.id}
+              className="border-b pb-4"
+            >
+
+              <p className="font-semibold">
+                {msg.name}
+              </p>
+
+              <p className="text-sm text-gray-500 mb-1">
+                {msg.email}
+              </p>
+
+              <p className="text-gray-700 line-clamp-2">
+                {msg.message}
               </p>
 
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 mb-10">
+          ))}
 
-              <div className="bg-gradient-to-r from-black to-gray-800 text-white rounded-3xl p-8 shadow-xl">
+        </div>
 
-                <h2 className="text-5xl font-bold">
-                  {influencers.length}
-                </h2>
-
-                <p className="mt-3">
-                  Total Influencers
-                </p>
-
-              </div>
-
-              <div className="bg-gradient-to-r from-pink-500 to-pink-700 text-white rounded-3xl p-8 shadow-xl">
-
-                <h2 className="text-5xl font-bold">
-                  {messages.length}
-                </h2>
-
-                <p className="mt-3">
-                  Contact Messages
-                </p>
-
-              </div>
-
-              <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-3xl p-8 shadow-xl">
-
-                <h2 className="text-5xl font-bold">
-                  {influencers.length + messages.length}
-                </h2>
-
-                <p className="mt-3">
-                  Total Records
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
- <a
-            href="/influencers"
-               >
-                <h2 className="text-xl font-bold mb-2">
-                  View Influencers
-                </h2>
-
-                <p className="text-gray-500">
-                  Manage creator profiles
-                </p>
-</a>
-              </div>
-
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
- <a
-            href="/admin/message"
-             >
-                <h2 className="text-xl font-bold mb-2">
-                  View Messages
-                </h2>
-
-                <p className="text-gray-500">
-                  Review contact requests
-                </p>
-</a>
-              </div>
-
-              <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition">
- <a
-            href="/admin/analytics"
-          >
-                <h2 className="text-xl font-bold mb-2">
-                  Platform Overview
-                </h2>
-
-                <p className="text-gray-500">
-                  Monitor platform performance
-                </p>
-</a>
-              </div>
-
-            </div>
-
-          </>
-
-        )}
-
-              {/* INFLUENCERS */}
-
-        {activeSection === "influencers" && (
-
-          <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
-
-            <div className="flex justify-between items-center mb-8">
-
-              <div>
-
-                <h2 className="text-4xl font-bold">
-                  Influencer Profiles
-                </h2>
-
-                <p className="text-gray-500 mt-2">
-                  Manage all registered creators
-                </p>
-
-              </div>
-
-              <div className="bg-black text-white px-5 py-3 rounded-2xl">
-
-                Total: {influencers.length}
-
-              </div>
-
-            </div>
-
-            <div className="overflow-x-auto">
-
-              <table className="w-full">
-
-                <thead>
-
-                  <tr className="border-b">
-
-                    <th className="py-5 text-left">
-                      Image
-                    </th>
-
-                    <th className="py-5 text-left">
-                      Name
-                    </th>
-
-                    <th className="py-5 text-left">
-                      Category
-                    </th>
-
-                    <th className="py-5 text-left">
-                      City
-                    </th>
-
-                    <th className="py-5 text-left">
-                      Followers
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {influencers.map((item) => (
-
-                    <tr
-                      key={item.id}
-                      className="border-b hover:bg-gray-50 transition-all duration-300"
-                    >
-
-                      <td className="py-5">
-
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 rounded-2xl object-cover"
-                        />
-
-                      </td>
-
-                      <td className="font-semibold">
-                        {item.name}
-                      </td>
-
-                      <td>
-                        {item.category}
-                      </td>
-
-                      <td>
-                        {item.city}
-                      </td>
-
-                      <td>
-                        {item.followers_count}
-                      </td>
-
-                    </tr>
-
-                  ))}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-          </div>
-
-        )}
-
-        {/* MESSAGES */}
-
-        {activeSection === "messages" && (
-
-          <div>
-
-            <div className="flex justify-between items-center mb-8">
-
-              <div>
-
-                <h2 className="text-4xl font-bold">
-                  Contact Messages
-                </h2>
-
-                <p className="text-gray-500 mt-2">
-                  Review messages submitted through the website
-                </p>
-
-              </div>
-
-              <div className="bg-black text-white px-5 py-3 rounded-2xl">
-
-                Total: {messages.length}
-
-              </div>
-
-            </div>
-
-            <div className="space-y-6">
-
-              {messages.map((msg) => (
-
-                <div
-                  key={msg.id}
-                  className="bg-white rounded-3xl p-7 shadow-lg hover:shadow-xl transition"
-                >
-
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-5">
-
-                    <div>
-
-                      <h3 className="text-2xl font-bold">
-                        {msg.name}
-                      </h3>
-
-                      <p className="text-gray-500">
-                        {msg.email}
-                      </p>
-
-                    </div>
-
-                    <div className="bg-gray-100 px-5 py-3 rounded-2xl font-medium">
-
-                      {msg.subject}
-
-                    </div>
-
-                  </div>
-
-                  <p className="text-gray-700 leading-relaxed text-lg">
-
-                    {msg.message}
-
-                  </p>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        )}
-
-      </main>
+      </div>
 
     </div>
 
-  );
-
+  </main>
+);
 }
