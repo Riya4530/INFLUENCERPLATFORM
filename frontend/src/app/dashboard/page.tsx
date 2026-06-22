@@ -95,106 +95,221 @@ const fetchDashboardStats = async (userId: string) => {
     window.location.href = "/login";
   };
 
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200 py-12 px-6">
+ return (
+  <main className="min-h-screen bg-gray-100 p-6">
 
-      <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto">
 
-        {/* HEADER */}
-        <div className="bg-white rounded-3xl shadow-xl p-10 mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+      {/* HERO SECTION */}
+      <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-700 text-white rounded-3xl p-8 md:p-10 shadow-xl mb-8">
 
-            <div className="flex items-center gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
 
-              <img
-                src={
-                  profileImage ||
-                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                }
-                className="w-28 h-28 rounded-full object-cover border-4 border-pink-500"
-              />
+          <div>
 
-              <div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-2">
-                  Welcome Back 👋
-                </h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3">
+              Welcome Back 👋
+            </h1>
 
-                {user && (
-                  <div>
-                    <p>Name: {user.name}</p>
-                    <p>Email: {user.email}</p>
-                    <p>Role: {user.role}</p>
-                  </div>
-                )}
-              </div>
+            <p className="text-lg text-pink-100 mb-4">
+              Manage collaborations, campaigns and grow your influence.
+            </p>
+
+            <div className="space-y-1">
+
+              <p>
+                <span className="font-semibold">
+                  Name:
+                </span>{" "}
+                {user?.name}
+              </p>
+
+              <p>
+                <span className="font-semibold">
+                  Email:
+                </span>{" "}
+                {user?.email}
+              </p>
+
+              <p>
+                <span className="font-semibold">
+                  Role:
+                </span>{" "}
+                {user?.role}
+              </p>
 
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-8 py-4 rounded-2xl"
-            >
-              Logout
-            </button>
-
-          </div>
-        </div>
-
-        {/* STATS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
-
-          <div className="bg-pink-600 text-white p-8 rounded-3xl">
-            <h2 className="text-5xl font-bold">{brandRequests}</h2>
-            <p>Brand Requests</p>
           </div>
 
-          <div className="bg-blue-600 text-white p-8 rounded-3xl">
-            <h2 className="text-5xl font-bold">{activeCampaigns}</h2>
-            <p>Active Campaigns</p>
-          </div>
-
-        </div>
-
-        {/* PROFILE PROGRESS */}
-        <div className="bg-white p-8 rounded-3xl mb-10">
-
-          <div className="flex justify-between">
-            <h2 className="text-2xl font-bold">Profile Completion</h2>
-            <span>{completion}%</span>
-          </div>
-
-          <div className="w-full bg-gray-200 h-4 rounded-full mt-4">
-            <div
-              className="bg-pink-600 h-4 rounded-full"
-              style={{ width: `${completion}%` }}
-            />
-          </div>
-
-        </div>
-
-        {/* ACTIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          {!hasProfile && (
-            <a href="/create-profile" className="bg-white p-6 rounded-3xl">
-              Create Profile
-            </a>
-          )}
-
-          {hasProfile && (
-            <a href={`/influencers/${profileId}`} className="bg-white p-6 rounded-3xl">
-              View Profile
-            </a>
-          )}
-
-          <a href="/dashboard/profile" className="bg-white p-6 rounded-3xl">
-            Edit Profile
-          </a>
+          <img
+            src={
+              profileImage ||
+              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+            }
+            alt="Profile"
+            className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+          />
 
         </div>
 
       </div>
 
-    </main>
-  );
+      {/* STATS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+        <div className="bg-white rounded-3xl p-8 shadow-lg">
+
+          <p className="text-gray-500 mb-2">
+            Brand Requests
+          </p>
+
+          <h2 className="text-5xl font-bold text-pink-600">
+            {brandRequests}
+          </h2>
+
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 shadow-lg">
+
+          <p className="text-gray-500 mb-2">
+            Active Campaigns
+          </p>
+
+          <h2 className="text-5xl font-bold text-blue-600">
+            {activeCampaigns}
+          </h2>
+
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 shadow-lg">
+
+          <p className="text-gray-500 mb-2">
+            Profile Completion
+          </p>
+
+          <h2 className="text-5xl font-bold text-green-600">
+            {completion}%
+          </h2>
+
+        </div>
+
+      </div>
+
+      {/* PROFILE COMPLETION */}
+      <div className="bg-white rounded-3xl p-8 shadow-lg mb-8">
+
+        <div className="flex justify-between mb-4">
+
+          <h2 className="text-2xl font-bold">
+            Profile Strength
+          </h2>
+
+          <span className="font-bold text-lg">
+            {completion}%
+          </span>
+
+        </div>
+
+        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+
+          <div
+            className="h-4 bg-gradient-to-r from-pink-500 to-purple-600"
+            style={{
+              width: `${completion}%`,
+            }}
+          />
+
+        </div>
+
+      </div>
+
+      {/* QUICK ACTIONS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {!hasProfile && (
+          <a
+            href="/create-profile"
+            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition"
+          >
+
+            <h2 className="text-2xl font-bold mb-2">
+              Create Profile
+            </h2>
+
+            <p className="text-gray-500">
+              Complete your creator profile.
+            </p>
+
+          </a>
+        )}
+
+        {hasProfile && (
+          <a
+            href={`/influencers/${profileId}`}
+            className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition"
+          >
+
+            <h2 className="text-2xl font-bold mb-2">
+              View Profile
+            </h2>
+
+            <p className="text-gray-500">
+              Check your public profile.
+            </p>
+
+          </a>
+        )}
+
+        <a
+          href="/dashboard/profile"
+          className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition"
+        >
+
+          <h2 className="text-2xl font-bold mb-2">
+            Edit Profile
+          </h2>
+
+          <p className="text-gray-500">
+            Update your profile information.
+          </p>
+
+        </a>
+
+        <a
+          href="/dashboard/campaigns"
+          className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition"
+        >
+
+          <h2 className="text-2xl font-bold mb-2">
+            Campaigns
+          </h2>
+
+          <p className="text-gray-500">
+            View all your campaigns.
+          </p>
+
+        </a>
+
+        <a
+          href="/dashboard/collaborations"
+          className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition"
+        >
+
+          <h2 className="text-2xl font-bold mb-2">
+            Collaborations
+          </h2>
+
+          <p className="text-gray-500">
+            Manage ongoing partnerships.
+          </p>
+
+        </a>
+
+      </div>
+
+    </div>
+
+  </main>
+);
 }
