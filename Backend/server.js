@@ -1481,18 +1481,14 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
   try {
     const { id } = req.params;
 
+    // ── 1. Fetch the request ──────────────────────────────────
     const requestResult = await pool.query(
-      `SELECT * FROM requests WHERE id = $1`,
+      `SELECT * FROM requests WHERE id::text = $1`,
       [id]
     );
-
     if (!requestResult.rows.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Request not found",
-      });
+      return res.status(404).json({ success: false, message: "Request not found" });
     }
-
     const request = requestResult.rows[0];
 
     if (request.invoice_generated) {
@@ -1502,90 +1498,104 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
       });
     }
 
-    const campaignResult = await pool.query(
-      `SELECT * FROM campaigns WHERE id = $1`,
-      [request.campaign_id]
-    );
+    // ── 2. Fetch related data ─────────────────────────────────
+    const [campaignResult, brandResult, influencerUserResult] = await Promise.all([
+      pool.query(`SELECT * FROM campaigns WHERE id = $1`, [request.campaign_id]),
+      pool.query(`SELECT * FROM users WHERE id::text = $1`, [request.brand_id]),
+      pool.query(`SELECT * FROM users WHERE id::text = $1`, [request.influencer_id]),
+    ]);
 
-    const brandResult = await pool.query(
-      `SELECT * FROM users WHERE id = $1`,
-      [request.brand_id]
-    );
-
-  const influencerUserResult = await pool.query(
-  `SELECT * FROM users WHERE id = $1`,
-  [request.influencer_id]
-);
-
-const influencerUser = influencerUserResult.rows[0];
-
-const influencerResult = await pool.query(
-  `SELECT * FROM influencer_profiles WHERE user_email = $1`,
-  [influencerUser.email]
-);
     const campaign = campaignResult.rows[0];
     const brand = brandResult.rows[0];
-    const influencer = influencerResult.rows[0];
+    const influencerUser = influencerUserResult.rows[0];
+
+    const influencerProfileResult = await pool.query(
+      `SELECT * FROM influencer_profiles WHERE user_email = $1`,
+      [influencerUser?.email]
+    );
+    const influencer = influencerProfileResult.rows[0];
 
     const amount = Number(request.quotation_amount || 0);
-    const gst = amount * 0.18;
-    const total = amount + gst;
+    const gst = Math.round(amount * 0.18 * 100) / 100;
+    const total = Math.round((amount + gst) * 100) / 100;
 
-    const invoice = await pool.query(
+    // ── 3. Insert invoice record ──────────────────────────────
+    const invoiceResult = await pool.query(
       `INSERT INTO invoices
-      (request_id, influencer_id, brand_id, campaign_id,
-       influencer_email, brand_email, client_name, campaign_name,
-       amount, gst, total, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-      RETURNING *`,
+       (request_id, influencer_id, brand_id, campaign_id,
+        influencer_email, brand_email, client_name, campaign_name,
+        amount, gst, total, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING *`,
       [
         request.id,
         request.influencer_id,
         request.brand_id,
         request.campaign_id,
-        influencer.user_email,
-        brand.email,
-        brand.name,
-        campaign.title,
+        influencerUser?.email || "",
+        brand?.email || "",
+        brand?.name || brand?.email || "",
+        campaign?.title || "",
         amount,
         gst,
         total,
         "pending",
       ]
     );
+    const createdInvoice = invoiceResult.rows[0];
 
-   const createdInvoice = invoice.rows[0];
+    // ── 4. Generate PDF into buffer ───────────────────────────
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: "A4" });
+      const buffers = [];
+      doc.on("data", (chunk) => buffers.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("error", reject);
 
-const doc = new PDFDocument({ margin: 50, size: "A4" });
+      buildInvoicePDF(doc, {
+        invoiceId: createdInvoice.id,
+        date: new Date(),
+        clientName: brand?.name || brand?.email || "N/A",
+        clientEmail: brand?.email || "N/A",
+        influencerName: influencer?.name || influencerUser?.email || "N/A",
+        influencerEmail: influencerUser?.email || "N/A",
+        campaignTitle: campaign?.title || "N/A",
+        campaignCategory: campaign?.category || "Influencer Marketing",
+        amount,
+        gst,
+        total,
+        status: "Pending",
+      });
 
-const buffers = [];
-doc.on("data", (chunk) => {
-  buffers.push(chunk);
-});
+      doc.end();
+    });
 
-doc.on("end", async () => {
-  try {
-    const pdfBuffer = Buffer.concat(buffers);
-    console.log("PDF generated, Size:", pdfBuffer.length);
+    console.log("PDF buffer size:", pdfBuffer.length);
 
-    const uploadResult = await new Promise(
-      (resolve, reject) => {
-        const uploadStream =
-          cloudinary.uploader.upload_stream(
-            {
-              resource_type: "raw",
-              folder: "invoices",
-              public_id: `invoice_${createdInvoice.id}.pdf`,
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-        streamifier.createReadStream(pdfBuffer).pipe(uploadStream);
-      }
-    );
+    // ── 5. Upload to Cloudinary ───────────────────────────────
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "raw",
+          folder: "invoices",
+          public_id: `invoice_${createdInvoice.id}`,
+          format: "pdf",
+          use_filename: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.log("Cloudinary error:", error);
+            reject(error);
+          } else {
+            console.log("Cloudinary upload success:", result.secure_url);
+            resolve(result);
+          }
+        }
+      );
+      streamifier.createReadStream(pdfBuffer).pipe(uploadStream);
+    });
 
+    // ── 6. Save PDF URL + mark invoice generated ──────────────
     await pool.query(`UPDATE invoices SET pdf_url = $1 WHERE id = $2`, [
       uploadResult.secure_url,
       createdInvoice.id,
@@ -1593,42 +1603,19 @@ doc.on("end", async () => {
 
     await pool.query(
       `UPDATE requests SET invoice_generated = TRUE WHERE id::text = $1`,
-      [request.id]
+      [String(request.id)]
     );
 
-    res.json({
+    // ── 7. Respond ────────────────────────────────────────────
+    return res.json({
       success: true,
-      invoice: createdInvoice,
-      pdf_url: uploadResult.secure_url || `/api/invoices/${createdInvoice.id}/pdf`,
+      invoice: { ...createdInvoice, pdf_url: uploadResult.secure_url },
+      pdf_url: uploadResult.secure_url,
     });
 
-  } catch (error) {
-    console.log("PDF Upload Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ---- PREMIUM INVOICE TEMPLATE ----
-buildInvoicePDF(doc, {
-  invoiceId: createdInvoice.id,
-  date: new Date(),
-  clientName: brand.name || brand.email,
-  clientEmail: brand.email,
-  influencerName: influencer.name || influencer.user_email,
-  influencerEmail: influencer.user_email,
-  campaignTitle: campaign.title,
-  campaignCategory: campaign.category || "Influencer Marketing",
-  amount,
-  gst,
-  total,
-  status: "Pending",
-});
-
-doc.end();
-
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false });
+    console.log("Generate invoice error:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 // ============================================================
