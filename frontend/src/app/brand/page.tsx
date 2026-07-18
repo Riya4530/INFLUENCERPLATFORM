@@ -72,7 +72,7 @@ console.log(requestsData);
 const acceptedRequests =
   (requestsData.requests || []).filter(
     (request: any) =>
-      request.status === "Accepted"
+      request.status === "Accepted" || request.deal_status === "Accepted"
   );
 
 console.log(

@@ -88,6 +88,10 @@ pool.query("SELECT 1")
 async function initDb() {
   try {
     await pool.query(`
+      ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS user_id UUID;
+      ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS user_email VARCHAR(255);
+      ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+
       ALTER TABLE requests ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending';
       ALTER TABLE requests ADD COLUMN IF NOT EXISTS quotation_amount NUMERIC;
       ALTER TABLE requests ADD COLUMN IF NOT EXISTS deal_status VARCHAR(50);
@@ -428,24 +432,28 @@ app.post("/api/upload-image", async (req, res) => {
 
 app.get("/api/influencers", async (req, res) => {
   try {
-    const profiles = await pool.query(`
-SELECT
-  influencer_profiles.*,
-  COALESCE(users.id, influencer_profiles.user_id) AS user_id,
-  users.name AS user_name,
-  users.email AS user_email
-FROM influencer_profiles
-LEFT JOIN users
-  ON users.email = influencer_profiles.user_email
-  OR users.id = influencer_profiles.user_id
-ORDER BY influencer_profiles.id DESC
-`);
+    let profiles;
+    try {
+      profiles = await pool.query(`
+        SELECT
+          influencer_profiles.*,
+          COALESCE(users.id::text, influencer_profiles.user_id::text, influencer_profiles.id::text) AS user_id,
+          COALESCE(influencer_profiles.name, users.name) AS name,
+          COALESCE(influencer_profiles.user_email, users.email) AS user_email
+        FROM influencer_profiles
+        LEFT JOIN users
+          ON users.email::text = influencer_profiles.user_email::text
+          OR users.id::text = influencer_profiles.user_id::text
+        ORDER BY influencer_profiles.id DESC
+      `);
+    } catch (e) {
+      console.log("JOIN fetch error, using fallback query:", e.message);
+      profiles = await pool.query(`SELECT *, id::text AS user_id FROM influencer_profiles ORDER BY id DESC`);
+    }
 
     res.json({
       success: true,
-      influencers: Array.isArray(profiles.rows)
-        ? profiles.rows
-        : [],
+      influencers: Array.isArray(profiles.rows) ? profiles.rows : [],
     });
 
   } catch (error) {
@@ -454,7 +462,7 @@ ORDER BY influencer_profiles.id DESC
     res.status(500).json({
       success: false,
       influencers: [],
-      message: "Something went wrong",
+      error: error.message,
     });
   }
 });
