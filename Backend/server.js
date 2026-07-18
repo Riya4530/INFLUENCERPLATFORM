@@ -106,6 +106,15 @@ async function initDb() {
       ALTER TABLE invoices ADD COLUMN IF NOT EXISTS pdf_url TEXT;
       ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
     `);
+    // Reset stale invoice_generated flags where no invoice row exists
+    await pool.query(`
+      UPDATE requests
+      SET invoice_generated = FALSE
+      WHERE invoice_generated = TRUE
+        AND id::text NOT IN (
+          SELECT DISTINCT request_id::text FROM invoices WHERE request_id IS NOT NULL
+        )
+    `);
     console.log("Database schema initialized and verified");
   } catch (e) {
     console.log("Db init error (continuing):", e.message);
@@ -881,12 +890,17 @@ app.get("/api/invitations/:influencerId", async (req, res) => {
         campaigns.category,
         campaigns.description,
         b.name AS brand_name,
-        b.email AS brand_email
+        b.email AS brand_email,
+        CASE WHEN inv.id IS NOT NULL THEN true ELSE false END AS invoice_generated,
+        inv.id AS invoice_id,
+        inv.pdf_url AS invoice_pdf_url
       FROM requests
       LEFT JOIN campaigns
         ON campaigns.id::text = requests.campaign_id::text
       LEFT JOIN users b
         ON b.id::text = requests.brand_id::text
+      LEFT JOIN invoices inv
+        ON inv.request_id::text = requests.id::text
       WHERE requests.influencer_id::text = $1
          OR requests.influencer_id::text IN (SELECT user_id::text FROM influencer_profiles WHERE id::text = $1)
       ORDER BY requests.created_at DESC
@@ -1491,7 +1505,12 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
     }
     const request = requestResult.rows[0];
 
-    if (request.invoice_generated) {
+    // Check live against invoices table (handles manually deleted invoices)
+    const existingInvoice = await pool.query(
+      `SELECT id FROM invoices WHERE request_id::text = $1 LIMIT 1`,
+      [String(request.id)]
+    );
+    if (existingInvoice.rows.length > 0) {
       return res.status(400).json({
         success: false,
         message: "Invoice has already been generated for this campaign",
