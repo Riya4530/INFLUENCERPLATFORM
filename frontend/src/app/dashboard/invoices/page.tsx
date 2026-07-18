@@ -81,17 +81,18 @@ export default function InvoicesPage() {
                   ₹{invoice.total}
                 </td>
 
-                <td className="p-4">
+               <td>
+  <p>{invoice.pdf_url}</p>
 
-<a
-  href={invoice.pdf_url}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
->
-  View PDF
-</a>
-                </td>
+  <a
+    href={invoice.pdf_url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+  >
+    View PDF
+  </a>
+</td>
               </tr>
             ))}
           </tbody>

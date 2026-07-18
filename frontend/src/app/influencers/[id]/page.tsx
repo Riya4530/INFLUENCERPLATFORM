@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Image from "next/image";
+import InfluencerDetailClient from "./InfluencerDetailClient";
 
 type Props = {
   params: Promise<{
@@ -101,89 +101,7 @@ export default async function InfluencerProfilePage(
 
     const influencer = data.influencer;
 
-    return (
-      <main className="min-h-screen bg-gray-100 py-10 px-6">
-
-        <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden shadow-xl">
-
-          <div className="relative w-full h-[500px]">
-
-            {influencer.image ? (
-
-              <Image
-                src={influencer.image}
-                alt={influencer.name}
-                fill
-                priority
-                className="object-cover"
-              />
-
-            ) : (
-
-              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                No Image Available
-              </div>
-
-            )}
-
-          </div>
-
-          <div className="p-10">
-
-            <h1 className="text-5xl font-bold mb-4">
-              {influencer.name}
-            </h1>
-
-            <p className="text-2xl text-gray-500 mb-4">
-              {influencer.category}
-            </p>
-
-            <p className="text-xl font-semibold mb-4">
-              📍 {influencer.city}
-            </p>
-
-            <p className="text-xl font-semibold mb-6">
-              👥 {influencer.followers_count || influencer.followers} Followers
-            </p>
-
-            <p className="text-lg text-gray-700 leading-8 mb-8">
-              {influencer.bio}
-            </p>
-
-            <div className="flex gap-4 flex-wrap">
-
-              {influencer.instagram && (
-
-                <a
-                  href={`https://instagram.com/${influencer.instagram.replace("@", "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-black text-white px-8 py-4 rounded-2xl font-semibold"
-                >
-                  View Instagram
-                </a>
-
-              )}
-
-              {influencer.user_email && (
-
-                <a
-                  href={`mailto:${influencer.user_email}`}
-                  className="inline-block bg-pink-600 text-white px-8 py-4 rounded-2xl font-semibold"
-                >
-                  Hire Influencer
-                </a>
-
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </main>
-    );
+    return <InfluencerDetailClient influencer={influencer} />;
 
   } catch (error) {
 

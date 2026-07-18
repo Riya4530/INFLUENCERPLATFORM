@@ -88,80 +88,80 @@ export default function BookingsPage() {
         </div>
 
         <div className="space-y-6">
+          {requests.length === 0 && (
+            <div className="bg-white p-8 rounded-3xl text-gray-500">
+              No collaboration requests received yet.
+            </div>
+          )}
 
           {requests.map((request) => (
-
             <div
               key={request.id}
-              className="bg-white p-8 rounded-3xl shadow-sm flex justify-between items-center"
+              className="bg-white p-8 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
             >
-
               <div>
-
                 <h2 className="text-2xl font-bold">
-  {request.title}
-</h2>
+                  {request.title || `Campaign #${request.campaign_id}`}
+                </h2>
 
-<p className="text-gray-500 mt-2">
-  Budget: {request.budget}
-</p>
+                <p className="text-gray-600 mt-1 font-semibold">
+                  Brand: {request.brand_name || "Brand Partner"}
+                </p>
 
-<p className="text-gray-500">
-  Category: {request.category}
-</p>
+                {request.budget && (
+                  <p className="text-gray-500 mt-1">
+                    Budget: ₹{request.budget}
+                  </p>
+                )}
 
-<p className="mt-3 text-gray-700">
-  {request.description}
-</p>
+                {request.category && (
+                  <p className="text-gray-500">
+                    Category: {request.category}
+                  </p>
+                )}
 
-<p className="mt-3 font-medium">
-  Status: {request.status}
-</p>
-
+                {request.description && (
+                  <p className="mt-3 text-gray-700">
+                    {request.description}
+                  </p>
+                )}
               </div>
 
-             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-4 py-2 rounded-full font-semibold text-sm ${
+                    request.status === "Accepted"
+                      ? "bg-green-100 text-green-700"
+                      : request.status === "Rejected"
+                      ? "bg-red-100 text-red-700"
+                      : request.status === "Quoted"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {request.status || "Pending"}
+                </span>
 
-  <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full">
-    {request.status}
-  </span>
+                {request.status === "Pending" && (
+                  <>
+                    <button
+                      onClick={() => updateStatus(request.id, "Accepted")}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition"
+                    >
+                      Accept
+                    </button>
 
-  {request.status === "Pending" && (
-
-    <>
-      <button
-        onClick={() =>
-          updateStatus(
-            request.id,
-            "Accepted"
-          )
-        }
-        className="bg-green-600 text-white px-4 py-2 rounded-xl"
-      >
-        Accept
-      </button>
-
-      <button
-        onClick={() =>
-          updateStatus(
-            request.id,
-            "Rejected"
-          )
-        }
-        className="bg-red-600 text-white px-4 py-2 rounded-xl"
-      >
-        Reject
-      </button>
-    </>
-
-  )}
-
-</div>
-
+                    <button
+                      onClick={() => updateStatus(request.id, "Rejected")}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-semibold transition"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-
           ))}
-
         </div>
 
       </div>

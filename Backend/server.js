@@ -9,8 +9,15 @@ const streamifier = require("streamifier");
 const PDFDocument = require("pdfkit");
 const app = express();
 
+const isCloudDb =
+  process.env.DATABASE_URL?.includes("render.com") ||
+  process.env.DATABASE_URL?.includes("railway.app") ||
+  process.env.DATABASE_URL?.includes("sslmode=") ||
+  process.env.DATABASE_URL?.includes("ssl=true");
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ...(isCloudDb ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 const allowedOrigins = [
@@ -72,10 +79,34 @@ async function broadcastInfluencers() {
 pool.query("SELECT 1")
   .then(() => {
     console.log("PostgreSQL connected successfully");
+    initDb();
   })
   .catch((err) => {
     console.log("Database connection error", err);
   });
+
+async function initDb() {
+  try {
+    await pool.query(`
+      ALTER TABLE requests ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending';
+      ALTER TABLE requests ADD COLUMN IF NOT EXISTS quotation_amount NUMERIC;
+      ALTER TABLE requests ADD COLUMN IF NOT EXISTS deal_status VARCHAR(50);
+      ALTER TABLE requests ADD COLUMN IF NOT EXISTS invoice_generated BOOLEAN DEFAULT FALSE;
+      ALTER TABLE requests ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS request_id UUID;
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS influencer_email VARCHAR(255);
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS brand_email VARCHAR(255);
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS client_name VARCHAR(255);
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS campaign_name VARCHAR(255);
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS pdf_url TEXT;
+      ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+    `);
+    console.log("Database schema initialized and verified");
+  } catch (e) {
+    console.log("Db init error (continuing):", e.message);
+  }
+}
 
 
 
@@ -400,13 +431,13 @@ app.get("/api/influencers", async (req, res) => {
     const profiles = await pool.query(`
 SELECT
   influencer_profiles.*,
-  users.id AS user_id
+  COALESCE(users.id, influencer_profiles.user_id) AS user_id,
+  users.name AS user_name,
+  users.email AS user_email
 FROM influencer_profiles
-JOIN users
-  ON users.email =
-     influencer_profiles.user_email
-WHERE LOWER(users.status) = 'active'
-  AND influencer_profiles.verification_status = 'Verified'
+LEFT JOIN users
+  ON users.email = influencer_profiles.user_email
+  OR users.id = influencer_profiles.user_id
 ORDER BY influencer_profiles.id DESC
 `);
 
@@ -418,7 +449,7 @@ ORDER BY influencer_profiles.id DESC
     });
 
   } catch (error) {
-    console.log(error);
+    console.log("Error fetching influencers:", error);
 
     res.status(500).json({
       success: false,
@@ -513,28 +544,7 @@ app.get(
 
   }
 );
-app.get("/api/influencers", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT *
-      FROM influencer_profiles
-      ORDER BY created_at DESC
-    `);
 
-    return res.json({
-      success: true,
-      influencers: result.rows,
-    });
-
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      influencers: [],
-    });
-  }
-});
 app.get("/api/seo/influencer/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -800,60 +810,59 @@ console.log("followers_count:", followers_count);
 app.post(
   "/api/invitations",
   async (req, res) => {
-
     try {
-
       console.log("Invitation Request:", req.body);
 
-      const {
-        brand_id,
-        influencer_id,
-        campaign_id
-      } = req.body;
+      const { brand_id, influencer_id, campaign_id } = req.body;
+
+      if (!brand_id || !influencer_id || !campaign_id) {
+        return res.status(400).json({
+          success: false,
+          message: "brand_id, influencer_id, and campaign_id are required",
+        });
+      }
+
+      // Check existing
+      const existing = await pool.query(
+        `SELECT * FROM requests 
+         WHERE brand_id::text = $1 AND influencer_id::text = $2 AND campaign_id::text = $3`,
+        [brand_id, influencer_id, campaign_id]
+      );
+
+      if (existing.rows.length > 0) {
+        return res.json({
+          success: true,
+          message: "Invitation already sent for this campaign",
+        });
+      }
 
       await pool.query(
         `
         INSERT INTO requests
-        (
-          brand_id,
-          influencer_id,
-          campaign_id,
-          status
-        )
+        (brand_id, influencer_id, campaign_id, status)
         VALUES
         ($1, $2, $3, 'Pending')
         `,
-        [
-          brand_id,
-          influencer_id,
-          campaign_id
-        ]
+        [brand_id, influencer_id, campaign_id]
       );
 
       res.json({
         success: true,
-        message: "Invitation sent"
+        message: "Invitation sent successfully",
       });
-
     } catch (error) {
-
-      console.log(error);
-
+      console.log("Invitation error:", error);
       res.status(500).json({
         success: false,
-        message: "Failed to send invitation"
+        message: "Failed to send invitation",
       });
-
     }
-
   }
 );
 
 app.get("/api/invitations/:influencerId", async (req, res) => {
   try {
     const { influencerId } = req.params;
-
-    console.log("INFLUENCER (USER) ID:", influencerId);
 
     const result = await pool.query(
       `
@@ -862,253 +871,207 @@ app.get("/api/invitations/:influencerId", async (req, res) => {
         campaigns.title,
         campaigns.budget,
         campaigns.category,
-        campaigns.description
+        campaigns.description,
+        b.name AS brand_name,
+        b.email AS brand_email
       FROM requests
       LEFT JOIN campaigns
-        ON campaigns.id = requests.campaign_id
-      WHERE requests.influencer_id = $1
+        ON campaigns.id::text = requests.campaign_id::text
+      LEFT JOIN users b
+        ON b.id::text = requests.brand_id::text
+      WHERE requests.influencer_id::text = $1
+         OR requests.influencer_id::text IN (SELECT user_id::text FROM influencer_profiles WHERE id::text = $1)
       ORDER BY requests.created_at DESC
       `,
       [influencerId]
     );
 
-    console.log("FOUND REQUESTS:", result.rows);
-
     return res.json({
       success: true,
       invitations: result.rows,
     });
-
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false });
+    console.log("Error fetching invitations:", error);
+    res.status(500).json({ success: false, invitations: [] });
   }
 });
-
-
 
 app.put(
   "/api/quotation/:requestId",
   async (req, res) => {
-
     try {
-
-      const { requestId } =
-        req.params;
-
-      const {
-        quotation_amount
-      } = req.body;
+      const { requestId } = req.params;
+      const { quotation_amount } = req.body;
 
       await pool.query(
         `
         UPDATE requests
-        SET
-          quotation_amount = $1
-        WHERE id = $2
+        SET quotation_amount = $1, status = 'Quoted'
+        WHERE id::text = $2
         `,
-        [
-          quotation_amount,
-          requestId
-        ]
+        [quotation_amount, requestId]
       );
 
       res.json({
         success: true,
-        message:
-          "Quotation sent successfully"
+        message: "Quotation sent successfully",
       });
-
     } catch (error) {
-
       console.log(error);
-
       res.status(500).json({
-        success: false
+        success: false,
+        message: "Failed to send quotation",
       });
-
     }
-
   }
 );
-
 
 app.get("/api/brand-quotations/:brandId", async (req, res) => {
   try {
     const { brandId } = req.params;
 
-  const result = await pool.query(
-  `
-  SELECT
-  r.*,
-  c.title,
-  u.name AS influencer_name
-FROM requests r
+    const result = await pool.query(
+      `
+      SELECT
+        r.*,
+        c.title,
+        COALESCE(u.name, ip.name) AS influencer_name
+      FROM requests r
+      LEFT JOIN campaigns c
+        ON c.id::text = r.campaign_id::text
+      LEFT JOIN users u
+        ON u.id::text = r.influencer_id::text
+      LEFT JOIN influencer_profiles ip
+        ON ip.user_id::text = r.influencer_id::text OR ip.id::text = r.influencer_id::text
+      WHERE r.brand_id::text = $1
+        AND r.quotation_amount IS NOT NULL
+      ORDER BY r.created_at DESC
+      `,
+      [brandId]
+    );
 
-LEFT JOIN campaigns c
-  ON c.id = r.campaign_id
-
-LEFT JOIN users u
-  ON u.id = r.influencer_id
-
-WHERE r.brand_id = $1
-AND r.quotation_amount IS NOT NULL
-
-ORDER BY r.created_at DESC
-  `,
-  [brandId]
-); 
     res.json({
       success: true,
-      quotations: result.rows
+      quotations: result.rows,
     });
-
   } catch (error) {
-    console.log(error);res.status(500).json({
-  success: false,
-  error: error.message,
-  stack: error.stack
-});
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      quotations: [],
+      error: error.message,
+    });
   }
 });
 
 app.put(
   "/api/deal/:requestId",
   async (req, res) => {
-
     try {
-
-      const { requestId } =
-        req.params;
-
-      const { deal_status } =
-        req.body;
+      const { requestId } = req.params;
+      const { deal_status } = req.body;
 
       await pool.query(
         `
         UPDATE requests
         SET deal_status = $1
-        WHERE id = $2
+        WHERE id::text = $2
         `,
-        [
-          deal_status,
-          requestId
-        ]
+        [deal_status, requestId]
       );
 
       res.json({
         success: true,
-        message:
-          "Deal status updated"
+        message: `Deal status updated to ${deal_status}`,
       });
-
     } catch (error) {
-
       console.log(error);
-
       res.status(500).json({
-        success: false
+        success: false,
+        message: "Failed to update deal status",
       });
-
     }
-
   }
 );
 
 app.get(
   "/api/collaborations/:brandId",
   async (req, res) => {
-
     try {
+      const { brandId } = req.params;
 
-      const { brandId } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT
-            r.*,
-            c.title,
-            i.name AS influencer_name
-          FROM requests r
-          LEFT JOIN campaigns c
-            ON c.id::text = r.campaign_id
-          LEFT JOIN influencer_profiles i
-            ON i.id = r.influencer_id
-          WHERE r.brand_id = $1
-          AND r.deal_status = 'Accepted'
-          ORDER BY r.created_at DESC
-          `,
-          [brandId]
-        );
+      const result = await pool.query(
+        `
+        SELECT
+          r.*,
+          c.title,
+          COALESCE(u.name, i.name) AS influencer_name
+        FROM requests r
+        LEFT JOIN campaigns c
+          ON c.id::text = r.campaign_id::text
+        LEFT JOIN users u
+          ON u.id::text = r.influencer_id::text
+        LEFT JOIN influencer_profiles i
+          ON i.user_id::text = r.influencer_id::text OR i.id::text = r.influencer_id::text
+        WHERE r.brand_id::text = $1
+        AND (r.deal_status = 'Accepted' OR r.status = 'Completed')
+        ORDER BY r.created_at DESC
+        `,
+        [brandId]
+      );
 
       res.json({
         success: true,
-        collaborations:
-          result.rows,
+        collaborations: result.rows,
       });
-
     } catch (error) {
-
       console.log(error);
-
       res.status(500).json({
         success: false,
+        collaborations: [],
       });
-
     }
-
   }
 );
 
 app.get(
   "/api/my-collaborations/:influencerId",
   async (req, res) => {
-
     try {
+      const { influencerId } = req.params;
 
-      const { influencerId } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT
-            r.*,
-            c.title,
-            b.name AS brand_name
-          FROM requests r
-          LEFT JOIN campaigns c
-  ON c.id = r.campaign_id
-          LEFT JOIN users b
-            ON b.id = r.brand_id
-          WHERE r.influencer_id = $1
-          AND r.deal_status = 'Accepted'
-          ORDER BY r.created_at DESC
-          `,
-          [influencerId]
-        );
+      const result = await pool.query(
+        `
+        SELECT
+          r.*,
+          c.title,
+          b.name AS brand_name,
+          b.email AS brand_email
+        FROM requests r
+        LEFT JOIN campaigns c
+          ON c.id::text = r.campaign_id::text
+        LEFT JOIN users b
+          ON b.id::text = r.brand_id::text
+        WHERE (r.influencer_id::text = $1 OR r.influencer_id::text IN (SELECT user_id::text FROM influencer_profiles WHERE id::text = $1))
+        AND (r.deal_status = 'Accepted' OR r.status = 'Completed')
+        ORDER BY r.created_at DESC
+        `,
+        [influencerId]
+      );
 
       res.json({
         success: true,
-        collaborations:
-          result.rows,
+        collaborations: result.rows,
       });
-
     } catch (error) {
-
       console.log(error);
-
       res.status(500).json({
         success: false,
+        collaborations: [],
       });
-
     }
-
   }
 );
-
 
 app.get(
   "/api/brand-requests/:brandId",
@@ -1121,20 +1084,15 @@ app.get(
         SELECT
           requests.*,
           campaigns.title,
-          influencer_profiles.name AS influencer_name
-
+          COALESCE(u.name, influencer_profiles.name) AS influencer_name
         FROM requests
-
         LEFT JOIN campaigns
-          ON campaigns.id::text =
-             requests.campaign_id::text
-
+          ON campaigns.id::text = requests.campaign_id::text
+        LEFT JOIN users u
+          ON u.id::text = requests.influencer_id::text
         LEFT JOIN influencer_profiles
-          ON influencer_profiles.id::text =
-             requests.influencer_id::text
-
+          ON influencer_profiles.user_id::text = requests.influencer_id::text OR influencer_profiles.id::text = requests.influencer_id::text
         WHERE requests.brand_id::text = $1
-
         ORDER BY requests.created_at DESC
         `,
         [brandId]
@@ -1144,9 +1102,7 @@ app.get(
         success: true,
         requests: result.rows,
       });
-
     } catch (error) {
-
       console.log(error);
 
       res.status(500).json({

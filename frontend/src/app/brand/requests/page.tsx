@@ -64,43 +64,52 @@ export default function RequestsPage() {
           )}
 
           {requests.map((request) => (
-
             <div
               key={request.id}
               className="bg-white p-8 rounded-3xl shadow-sm"
             >
-
               <h2 className="text-2xl font-bold">
-                {request.influencer_name}
+                {request.influencer_name || "Influencer"}
               </h2>
 
-              <p className="text-gray-500 mt-2">
-                Campaign: {request.title}
+              <p className="text-gray-600 mt-2">
+                Campaign: <span className="font-semibold text-gray-900">{request.title || request.campaign_id}</span>
               </p>
 
-              <p className="text-gray-500">
-                Campaign ID: {request.campaign_id}
-              </p>
+              {request.quotation_amount && (
+                <p className="text-green-600 font-bold mt-2">
+                  Quoted Price: ₹{request.quotation_amount}
+                </p>
+              )}
 
-              <div className="mt-4">
-
+              <div className="mt-4 flex gap-3 items-center">
                 <span
-                  className={`px-4 py-2 rounded-full text-sm font-medium
-                    ${
-                      request.status === "Accepted"
-                        ? "bg-green-100 text-green-700"
-                        : request.status === "Rejected"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    request.status === "Accepted"
+                      ? "bg-green-100 text-green-700"
+                      : request.status === "Rejected"
+                      ? "bg-red-100 text-red-700"
+                      : request.status === "Quoted"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
                 >
-                  {request.status}
+                  Status: {request.status || "Pending"}
                 </span>
 
+                {request.deal_status && (
+                  <span
+                    className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                      request.deal_status === "Accepted"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-rose-100 text-rose-800"
+                    }`}
+                  >
+                    Deal: {request.deal_status}
+                  </span>
+                )}
               </div>
-
             </div>
-
           ))}
 
         </div>

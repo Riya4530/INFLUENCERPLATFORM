@@ -400,79 +400,50 @@ fetchCampaigns();
               <button
                 className="bg-black text-white flex-1 py-2 rounded-xl"
                 onClick={async () => {
+                  try {
+                    if (!campaignId) {
+                      alert("Please select a campaign first.");
+                      return;
+                    }
 
-  try {
+                    const user = JSON.parse(
+                      localStorage.getItem("user") || "{}"
+                    );
 
-    const user = JSON.parse(
-      localStorage.getItem("user") || "{}"
-    );
+                    const targetInfluencerId =
+                      selectedInfluencer.user_id || selectedInfluencer.id;
 
-    console.log("USER =", user);
-console.log("BRAND ID =", user?.id);
-console.log("INFLUENCER ID =", selectedInfluencer?.id);
-console.log("SELECTED INFLUENCER =", selectedInfluencer);
+                    if (!user.id || !targetInfluencerId) {
+                      alert("Missing user session or influencer information.");
+                      return;
+                    }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },                
-        body: JSON.stringify({
-          brand_id: user.id,
-          influencer_id:
-            selectedInfluencer.user_id,
-          campaign_id:
-            campaignId,
-        }),
-      }
-    );
+                    const response = await fetch(
+                      `${process.env.NEXT_PUBLIC_API_URL}/api/invitations`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          brand_id: user.id,
+                          influencer_id: targetInfluencerId,
+                          campaign_id: campaignId,
+                        }),
+                      }
+                    );
 
-  const data =
-  await response.json();
+                    const data = await response.json();
 
-if (data.success) {
+                    alert(data.message || "Invitation sent successfully!");
 
-  const existingRequests = JSON.parse(
-    localStorage.getItem("brandRequests") || "[]"
-  );
-
-  existingRequests.push({
-    influencerName:
-      selectedInfluencer.name,
-    campaignId:
-      campaignId,
-    status: "Pending",
-    quoteAmount: null,
-  });
-
-  localStorage.setItem(
-    "brandRequests",
-    JSON.stringify(
-      existingRequests
-    )
-  );
-}
-
-alert(data.message);
-
-setSelectedInfluencer(null);
-setCampaignId("");
-
-
-  } catch (error) {
-
-    console.log(error);
-
-    alert(
-      "Failed to send invitation"
-    );
-
-  }
-
-}}
+                    setSelectedInfluencer(null);
+                    setCampaignId("");
+                  } catch (error) {
+                    console.log(error);
+                    alert("Failed to send invitation");
+                  }
+                }}
               >
                 Send Invite
               </button>

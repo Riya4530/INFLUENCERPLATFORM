@@ -79,69 +79,53 @@ const updateDealStatus = async (
         </h1>
 
         <div className="space-y-6">
-
-          {quotations.map(
-            (quote) => (
-
-              <div
-                key={quote.id}
-                className="bg-white p-8 rounded-3xl shadow-sm"
-              >
-
-               <h2 className="text-2xl font-bold">
-  {quote.title}
-</h2>
-
-<p className="mt-2 text-gray-600">
-  Influencer:
-  {" "}
-  {quote.influencer_name}
-</p>
-
-<p className="mt-4 text-xl font-bold text-green-600">
-  Quote:
-  ₹{quote.quotation_amount}
-</p>
-
-<p className="mt-2">
-  Deal Status:
-  {" "}
-  {quote.deal_status || "Pending"}
-</p>
-
-<div className="flex gap-3 mt-4">
-
-  <button
-    onClick={() =>
-      updateDealStatus(
-        quote.id,
-        "Accepted"
-      )
-    }
-    className="bg-green-600 text-white px-4 py-2 rounded-xl"
-  >
-    Accept Quote
-  </button>
-
-  <button
-    onClick={() =>
-      updateDealStatus(
-        quote.id,
-        "Rejected"
-      )
-    }
-    className="bg-red-600 text-white px-4 py-2 rounded-xl"
-  >
-    Reject Quote
-  </button>
-
-</div>
-
-              </div>
-
-            )
+          {quotations.length === 0 && (
+            <div className="bg-white p-8 rounded-3xl text-gray-500">
+              No quotations received yet.
+            </div>
           )}
 
+          {quotations.map((quote) => (
+            <div
+              key={quote.id}
+              className="bg-white p-8 rounded-3xl shadow-sm"
+            >
+              <h2 className="text-2xl font-bold">
+                {quote.title || `Campaign #${quote.campaign_id}`}
+              </h2>
+
+              <p className="mt-2 text-gray-600">
+                Influencer: <span className="font-semibold text-gray-900">{quote.influencer_name || "Influencer"}</span>
+              </p>
+
+              <p className="mt-4 text-xl font-bold text-green-600">
+                Quote: ₹{quote.quotation_amount}
+              </p>
+
+              <p className="mt-2 text-gray-700">
+                Deal Status:{" "}
+                <span className={`font-semibold ${quote.deal_status === "Accepted" ? "text-green-600" : quote.deal_status === "Rejected" ? "text-red-600" : "text-yellow-600"}`}>
+                  {quote.deal_status || "Pending"}
+                </span>
+              </p>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => updateDealStatus(quote.id, "Accepted")}
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-semibold transition"
+                >
+                  Accept Quote
+                </button>
+
+                <button
+                  onClick={() => updateDealStatus(quote.id, "Rejected")}
+                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-semibold transition"
+                >
+                  Reject Quote
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>
