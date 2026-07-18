@@ -1556,7 +1556,7 @@ const influencerResult = await pool.query(
 
    const createdInvoice = invoice.rows[0];
 
-const doc = new PDFDocument();
+const doc = new PDFDocument({ margin: 50, size: "A4" });
 
 const buffers = [];
 doc.on("data", (chunk) => {
@@ -1566,9 +1566,7 @@ doc.on("data", (chunk) => {
 doc.on("end", async () => {
   try {
     const pdfBuffer = Buffer.concat(buffers);
-
-    console.log("PDF generated");
-    console.log("Size:", pdfBuffer.length);
+    console.log("PDF generated, Size:", pdfBuffer.length);
 
     const uploadResult = await new Promise(
       (resolve, reject) => {
@@ -1584,24 +1582,14 @@ doc.on("end", async () => {
               else resolve(result);
             }
           );
-
-        streamifier
-          .createReadStream(pdfBuffer)
-          .pipe(uploadStream);
+        streamifier.createReadStream(pdfBuffer).pipe(uploadStream);
       }
     );
 
-    await pool.query(
-      `
-      UPDATE invoices
-      SET pdf_url = $1
-      WHERE id = $2
-      `,
-      [
-        uploadResult.secure_url,
-        createdInvoice.id,
-      ]
-    );
+    await pool.query(`UPDATE invoices SET pdf_url = $1 WHERE id = $2`, [
+      uploadResult.secure_url,
+      createdInvoice.id,
+    ]);
 
     await pool.query(
       `UPDATE requests SET invoice_generated = TRUE WHERE id::text = $1`,
@@ -1616,32 +1604,25 @@ doc.on("end", async () => {
 
   } catch (error) {
     console.log("PDF Upload Error:", error);
-
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
-doc.fontSize(22).text("INVOICE", {
-  align: "center",
+
+// ---- PREMIUM INVOICE TEMPLATE ----
+buildInvoicePDF(doc, {
+  invoiceId: createdInvoice.id,
+  date: new Date(),
+  clientName: brand.name || brand.email,
+  clientEmail: brand.email,
+  influencerName: influencer.name || influencer.user_email,
+  influencerEmail: influencer.user_email,
+  campaignTitle: campaign.title,
+  campaignCategory: campaign.category || "Influencer Marketing",
+  amount,
+  gst,
+  total,
+  status: "Pending",
 });
-
-doc.moveDown();
-
-doc.fontSize(12).text(`Invoice ID: ${createdInvoice.id}`);
-doc.text(`Client: ${brand.name || brand.email}`);
-doc.text(`Campaign: ${campaign.title}`);
-
-doc.moveDown();
-
-doc.text(`Influencer: ${influencer.name}`);
-
-doc.moveDown();
-
-doc.text(`Amount: ₹${amount}`);
-doc.text(`GST (18%): ₹${gst}`);
-doc.text(`Total Amount: ₹${total}`);
 
 doc.end();
 
@@ -1650,6 +1631,163 @@ doc.end();
     res.status(500).json({ success: false });
   }
 });
+// ============================================================
+// SHARED INVOICE PDF BUILDER - PREMIUM TEMPLATE
+// ============================================================
+function buildInvoicePDF(doc, data) {
+  const {
+    invoiceId, date, clientName, clientEmail,
+    influencerName, influencerEmail,
+    campaignTitle, campaignCategory,
+    amount, gst, total, status,
+  } = data;
+
+  const PAGE_WIDTH = doc.page.width;
+  const MARGIN = 50;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+  const dateStr = new Date(date || Date.now()).toLocaleDateString("en-IN", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+  const invoiceNum = `INV-${String(invoiceId).padStart(5, "0")}`;
+
+  // ── HEADER BANNER ──────────────────────────────────────────
+  doc.rect(0, 0, PAGE_WIDTH, 110).fill("#1a1a2e");
+
+  // Brand name / platform logo area
+  doc.fillColor("#e94560").fontSize(22).font("Helvetica-Bold")
+    .text("InfluencerPlatform", MARGIN, 28, { width: CONTENT_WIDTH * 0.6 });
+
+  doc.fillColor("#aaaacc").fontSize(9).font("Helvetica")
+    .text("Creator Economy Solutions", MARGIN, 54, { width: CONTENT_WIDTH * 0.6 });
+
+  // INVOICE label top-right
+  doc.fillColor("#ffffff").fontSize(28).font("Helvetica-Bold")
+    .text("INVOICE", MARGIN, 28, { align: "right", width: CONTENT_WIDTH });
+
+  doc.fillColor("#aaaacc").fontSize(10).font("Helvetica")
+    .text(invoiceNum, MARGIN, 62, { align: "right", width: CONTENT_WIDTH });
+
+  doc.fillColor("#aaaacc").fontSize(9)
+    .text(`Date: ${dateStr}`, MARGIN, 78, { align: "right", width: CONTENT_WIDTH });
+
+  // ── STATUS PILL ────────────────────────────────────────────
+  const pillColor = (status || "").toLowerCase() === "paid" ? "#16a34a" : "#d97706";
+  const pillLabel = (status || "Pending").toUpperCase();
+  const pillX = PAGE_WIDTH - MARGIN - 90;
+  doc.roundedRect(pillX, 88, 90, 18, 9).fill(pillColor);
+  doc.fillColor("#ffffff").fontSize(8).font("Helvetica-Bold")
+    .text(pillLabel, pillX, 92, { width: 90, align: "center" });
+
+  // ── SECTION: BILLED TO / FROM ──────────────────────────────
+  let y = 135;
+
+  doc.fillColor("#e94560").fontSize(8).font("Helvetica-Bold")
+    .text("BILLED TO", MARGIN, y);
+
+  doc.fillColor("#e94560").fontSize(8).font("Helvetica-Bold")
+    .text("SERVICE PROVIDER", MARGIN + CONTENT_WIDTH / 2, y);
+
+  y += 14;
+  doc.fillColor("#1a1a2e").fontSize(13).font("Helvetica-Bold")
+    .text(clientName || "N/A", MARGIN, y, { width: CONTENT_WIDTH / 2 - 10 });
+
+  doc.fillColor("#1a1a2e").fontSize(13).font("Helvetica-Bold")
+    .text(influencerName || "N/A", MARGIN + CONTENT_WIDTH / 2, y, { width: CONTENT_WIDTH / 2 });
+
+  y += 20;
+  doc.fillColor("#555577").fontSize(10).font("Helvetica")
+    .text(clientEmail || "", MARGIN, y, { width: CONTENT_WIDTH / 2 - 10 });
+
+  doc.fillColor("#555577").fontSize(10).font("Helvetica")
+    .text(influencerEmail || "", MARGIN + CONTENT_WIDTH / 2, y, { width: CONTENT_WIDTH / 2 });
+
+  y += 30;
+  // thin divider
+  doc.moveTo(MARGIN, y).lineTo(PAGE_WIDTH - MARGIN, y).strokeColor("#e2e8f0").lineWidth(1).stroke();
+
+  // ── SECTION: CAMPAIGN DETAILS ──────────────────────────────
+  y += 18;
+  doc.fillColor("#e94560").fontSize(8).font("Helvetica-Bold").text("CAMPAIGN DETAILS", MARGIN, y);
+
+  y += 14;
+  // Campaign info row box
+  doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 52, 8).fill("#f8f9fc");
+
+  doc.fillColor("#1a1a2e").fontSize(12).font("Helvetica-Bold")
+    .text(campaignTitle || "N/A", MARGIN + 14, y + 10, { width: CONTENT_WIDTH - 28 });
+
+  doc.fillColor("#888899").fontSize(9).font("Helvetica")
+    .text(`Category: ${campaignCategory || "Influencer Marketing"}  •  Scope: Full Campaign Collaboration`, MARGIN + 14, y + 30, { width: CONTENT_WIDTH - 28 });
+
+  y += 70;
+
+  // ── SECTION: LINE ITEMS TABLE ──────────────────────────────
+  doc.fillColor("#e94560").fontSize(8).font("Helvetica-Bold").text("BREAKDOWN", MARGIN, y);
+  y += 14;
+
+  // Table header
+  doc.rect(MARGIN, y, CONTENT_WIDTH, 28).fill("#1a1a2e");
+  doc.fillColor("#ffffff").fontSize(9).font("Helvetica-Bold")
+    .text("DESCRIPTION", MARGIN + 12, y + 9, { width: CONTENT_WIDTH * 0.55 });
+  doc.text("QTY", MARGIN + CONTENT_WIDTH * 0.55, y + 9, { width: 40, align: "center" });
+  doc.text("AMOUNT", MARGIN + CONTENT_WIDTH * 0.72, y + 9, { width: CONTENT_WIDTH * 0.28 - 12, align: "right" });
+
+  y += 28;
+
+  // Row helper
+  const tableRow = (desc, qty, amt, shade) => {
+    doc.rect(MARGIN, y, CONTENT_WIDTH, 26).fill(shade);
+    doc.fillColor("#1a1a2e").fontSize(10).font("Helvetica")
+      .text(desc, MARGIN + 12, y + 7, { width: CONTENT_WIDTH * 0.55 });
+    doc.text(qty, MARGIN + CONTENT_WIDTH * 0.55, y + 7, { width: 40, align: "center" });
+    doc.font("Helvetica-Bold")
+      .text(amt, MARGIN + CONTENT_WIDTH * 0.72, y + 7, { width: CONTENT_WIDTH * 0.28 - 12, align: "right" });
+    y += 26;
+  };
+
+  tableRow(`Campaign Service — ${campaignTitle || "Influencer Collaboration"}`, "1",
+    `Rs. ${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, "#ffffff");
+  tableRow("GST @ 18%", "—",
+    `Rs. ${Number(gst).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, "#f8f9fc");
+
+  y += 4;
+  // Total row
+  doc.rect(MARGIN, y, CONTENT_WIDTH, 36).fill("#1a1a2e");
+  doc.fillColor("#aaaacc").fontSize(10).font("Helvetica")
+    .text("TOTAL AMOUNT DUE", MARGIN + 12, y + 11, { width: CONTENT_WIDTH * 0.6 });
+  doc.fillColor("#e94560").fontSize(16).font("Helvetica-Bold")
+    .text(
+      `Rs. ${Number(total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      MARGIN + CONTENT_WIDTH * 0.55, y + 8,
+      { width: CONTENT_WIDTH * 0.45 - 12, align: "right" }
+    );
+
+  y += 54;
+
+  // ── SECTION: NOTES / TERMS ─────────────────────────────────
+  doc.moveTo(MARGIN, y).lineTo(PAGE_WIDTH - MARGIN, y).strokeColor("#e2e8f0").lineWidth(1).stroke();
+  y += 14;
+
+  doc.fillColor("#e94560").fontSize(8).font("Helvetica-Bold").text("PAYMENT TERMS & NOTES", MARGIN, y);
+  y += 12;
+  doc.fillColor("#888899").fontSize(9).font("Helvetica")
+    .text(
+      "Payment is due within 15 days of invoice date. All amounts are in Indian Rupees (INR). " +
+      "GST @ 18% has been applied as per applicable tax regulations. This invoice is system-generated by InfluencerPlatform.",
+      MARGIN, y, { width: CONTENT_WIDTH, lineGap: 4 }
+    );
+
+  // ── FOOTER BAR ─────────────────────────────────────────────
+  const PAGE_HEIGHT = doc.page.height;
+  doc.rect(0, PAGE_HEIGHT - 48, PAGE_WIDTH, 48).fill("#1a1a2e");
+  doc.fillColor("#555577").fontSize(8).font("Helvetica")
+    .text(
+      "InfluencerPlatform  •  platform@influencer.com  •  www.influencerplatform.com",
+      0, PAGE_HEIGHT - 28, { align: "center", width: PAGE_WIDTH }
+    );
+}
+
+// ── STREAMING ENDPOINT (for View PDF button) ───────────────
 app.get("/api/invoices/:id/pdf", async (req, res) => {
   try {
     const { id } = req.params;
@@ -1657,47 +1795,32 @@ app.get("/api/invoices/:id/pdf", async (req, res) => {
     if (!result.rows.length) {
       return res.status(404).send("Invoice not found");
     }
-
     const invoice = result.rows[0];
 
     if (invoice.pdf_url && invoice.pdf_url.startsWith("http")) {
       return res.redirect(invoice.pdf_url);
     }
 
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=invoice_${invoice.id}.pdf`);
-
+    res.setHeader("Content-Disposition", `inline; filename=INV-${String(invoice.id).padStart(5, "0")}.pdf`);
     doc.pipe(res);
 
-    doc.fontSize(24).font("Helvetica-Bold").text("INVOICE", { align: "center" });
-    doc.moveDown(1.5);
+    buildInvoicePDF(doc, {
+      invoiceId: invoice.id,
+      date: invoice.created_at,
+      clientName: invoice.client_name,
+      clientEmail: invoice.brand_email,
+      influencerName: invoice.influencer_email,
+      influencerEmail: invoice.influencer_email,
+      campaignTitle: invoice.campaign_name,
+      campaignCategory: "Influencer Marketing",
+      amount: Number(invoice.amount || 0),
+      gst: Number(invoice.gst || 0),
+      total: Number(invoice.total || 0),
+      status: invoice.status,
+    });
 
-    doc.fontSize(12).font("Helvetica");
-    doc.text(`Invoice ID: ${invoice.id}`);
-    doc.text(`Date: ${new Date(invoice.created_at || Date.now()).toLocaleDateString()}`);
-    doc.moveDown();
-
-    doc.fontSize(14).font("Helvetica-Bold").text("Billed To:");
-    doc.fontSize(12).font("Helvetica");
-    doc.text(`Client Name: ${invoice.client_name || "N/A"}`);
-    doc.text(`Client Email: ${invoice.brand_email || "N/A"}`);
-    doc.moveDown();
-
-    doc.fontSize(14).font("Helvetica-Bold").text("Service Details:");
-    doc.fontSize(12).font("Helvetica");
-    doc.text(`Campaign Title: ${invoice.campaign_name || "N/A"}`);
-    doc.text(`Influencer Email: ${invoice.influencer_email || "N/A"}`);
-    doc.moveDown(1.5);
-
-    doc.fontSize(14).font("Helvetica-Bold").text("Payment Breakdown:");
-    doc.fontSize(12).font("Helvetica");
-    doc.text(`Subtotal Amount: ₹${Number(invoice.amount || 0).toLocaleString()}`);
-    doc.text(`GST (18%): ₹${Number(invoice.gst || 0).toLocaleString()}`);
-    doc.fontSize(14).font("Helvetica-Bold").text(`Total Amount: ₹${Number(invoice.total || 0).toLocaleString()}`);
-    doc.moveDown();
-
-    doc.text(`Payment Status: ${(invoice.status || "Pending").toUpperCase()}`);
     doc.end();
   } catch (err) {
     console.log("PDF stream error:", err);
