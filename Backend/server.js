@@ -1495,6 +1495,13 @@ app.post("/api/requests/:id/generate-invoice", async (req, res) => {
 
     const request = requestResult.rows[0];
 
+    if (request.invoice_generated) {
+      return res.status(400).json({
+        success: false,
+        message: "Invoice has already been generated for this campaign",
+      });
+    }
+
     const campaignResult = await pool.query(
       `SELECT * FROM campaigns WHERE id = $1`,
       [request.campaign_id]
@@ -1596,10 +1603,15 @@ doc.on("end", async () => {
       ]
     );
 
+    await pool.query(
+      `UPDATE requests SET invoice_generated = TRUE WHERE id::text = $1`,
+      [request.id]
+    );
+
     res.json({
       success: true,
       invoice: createdInvoice,
-      pdf_url: uploadResult.secure_url,
+      pdf_url: uploadResult.secure_url || `/api/invoices/${createdInvoice.id}/pdf`,
     });
 
   } catch (error) {
@@ -1638,6 +1650,61 @@ doc.end();
     res.status(500).json({ success: false });
   }
 });
+app.get("/api/invoices/:id/pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`SELECT * FROM invoices WHERE id::text = $1`, [id]);
+    if (!result.rows.length) {
+      return res.status(404).send("Invoice not found");
+    }
+
+    const invoice = result.rows[0];
+
+    if (invoice.pdf_url && invoice.pdf_url.startsWith("http")) {
+      return res.redirect(invoice.pdf_url);
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename=invoice_${invoice.id}.pdf`);
+
+    doc.pipe(res);
+
+    doc.fontSize(24).font("Helvetica-Bold").text("INVOICE", { align: "center" });
+    doc.moveDown(1.5);
+
+    doc.fontSize(12).font("Helvetica");
+    doc.text(`Invoice ID: ${invoice.id}`);
+    doc.text(`Date: ${new Date(invoice.created_at || Date.now()).toLocaleDateString()}`);
+    doc.moveDown();
+
+    doc.fontSize(14).font("Helvetica-Bold").text("Billed To:");
+    doc.fontSize(12).font("Helvetica");
+    doc.text(`Client Name: ${invoice.client_name || "N/A"}`);
+    doc.text(`Client Email: ${invoice.brand_email || "N/A"}`);
+    doc.moveDown();
+
+    doc.fontSize(14).font("Helvetica-Bold").text("Service Details:");
+    doc.fontSize(12).font("Helvetica");
+    doc.text(`Campaign Title: ${invoice.campaign_name || "N/A"}`);
+    doc.text(`Influencer Email: ${invoice.influencer_email || "N/A"}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).font("Helvetica-Bold").text("Payment Breakdown:");
+    doc.fontSize(12).font("Helvetica");
+    doc.text(`Subtotal Amount: ₹${Number(invoice.amount || 0).toLocaleString()}`);
+    doc.text(`GST (18%): ₹${Number(invoice.gst || 0).toLocaleString()}`);
+    doc.fontSize(14).font("Helvetica-Bold").text(`Total Amount: ₹${Number(invoice.total || 0).toLocaleString()}`);
+    doc.moveDown();
+
+    doc.text(`Payment Status: ${(invoice.status || "Pending").toUpperCase()}`);
+    doc.end();
+  } catch (err) {
+    console.log("PDF stream error:", err);
+    res.status(500).send("Error generating PDF invoice");
+  }
+});
+
 app.get("/api/invoices/influencer/:email", async (req, res) => {
   const { email } = req.params;
 

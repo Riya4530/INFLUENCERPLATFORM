@@ -81,18 +81,20 @@ export default function InvoicesPage() {
                   ₹{invoice.total}
                 </td>
 
-               <td>
-  <p>{invoice.pdf_url}</p>
-
-  <a
-    href={invoice.pdf_url}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-  >
-    View PDF
-  </a>
-</td>
+                <td className="p-4">
+                  <a
+                    href={
+                      invoice.pdf_url && invoice.pdf_url.startsWith("http")
+                        ? invoice.pdf_url
+                        : `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/pdf`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition inline-block"
+                  >
+                    View PDF
+                  </a>
+                </td>
               </tr>
             ))}
           </tbody>

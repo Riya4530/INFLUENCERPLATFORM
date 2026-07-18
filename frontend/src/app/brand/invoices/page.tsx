@@ -83,14 +83,29 @@ export default function BrandInvoicesPage() {
               Status: {invoice.status}
             </p>
 
-            {invoice.status !== "Paid" && (
-              <button
-                onClick={() => markPaid(invoice.id)}
-                className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg"
+            <div className="flex gap-3 mt-4 items-center">
+              {invoice.status !== "Paid" && (
+                <button
+                  onClick={() => markPaid(invoice.id)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
+                >
+                  Mark Paid
+                </button>
+              )}
+
+              <a
+                href={
+                  invoice.pdf_url && invoice.pdf_url.startsWith("http")
+                    ? invoice.pdf_url
+                    : `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/pdf`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition inline-block"
               >
-                Mark Paid
-              </button>
-            )}
+                View PDF
+              </a>
+            </div>
           </div>
         ))}
       </div>

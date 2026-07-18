@@ -59,18 +59,30 @@ export default function CampaignsPage() {
   // -----------------------------
   // GENERATE INVOICE (FIXED)
   // -----------------------------
-  const generateInvoice = async (requestId: number) => {
+  const generateInvoice = async (requestId: any) => {
     try {
-      await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}/generate-invoice`,
         {
           method: "POST",
         }
       );
 
-      alert("Invoice Generated Successfully");
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Invoice Generated Successfully!");
+        setCampaigns((prev) =>
+          prev.map((c) =>
+            c.id === requestId ? { ...c, invoice_generated: true } : c
+          )
+        );
+      } else {
+        alert(data.message || "Failed to generate invoice");
+      }
     } catch (error) {
       console.log(error);
+      alert("Failed to generate invoice");
     }
   };
 
@@ -119,26 +131,37 @@ export default function CampaignsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-4 mt-6 items-center">
                 {campaign.status !== "Completed" && (
                   <button
                     onClick={() => markCompleted(campaign.id)}
-                    className="bg-black text-white px-6 py-3 rounded-xl"
+                    className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition"
                   >
                     Mark Completed
                   </button>
                 )}
 
-                {campaign.status === "Completed" && (
+                {campaign.status === "Completed" && !campaign.invoice_generated && (
                   <button
-                    onClick={() =>
-                      generateInvoice(campaign.
-                        id)
-                    }
-                    className="bg-green-600 text-white px-6 py-3 rounded-xl"
+                    onClick={() => generateInvoice(campaign.id)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition"
                   >
                     Generate Invoice
                   </button>
+                )}
+
+                {campaign.status === "Completed" && campaign.invoice_generated && (
+                  <div className="flex items-center gap-3">
+                    <span className="bg-emerald-100 text-emerald-800 font-semibold px-4 py-2.5 rounded-xl text-sm">
+                      ✓ Invoice Generated
+                    </span>
+                    <a
+                      href="/dashboard/invoices"
+                      className="bg-black text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 transition inline-block"
+                    >
+                      View Invoices
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
