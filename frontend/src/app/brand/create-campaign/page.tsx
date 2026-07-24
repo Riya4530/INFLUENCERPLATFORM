@@ -35,6 +35,11 @@ export default function CreateCampaign() {
         localStorage.getItem("user") || "{}"
       );
 
+      if (!user?.id) {
+        alert("You must be logged in as a Brand to create a campaign.");
+        return;
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`,
         {
@@ -76,7 +81,6 @@ export default function CreateCampaign() {
     }
   };
 
-  console.log("Current categories:", categories);
 
   return (
      <main className="min-h-screen bg-gray-100 p-10">

@@ -11,8 +11,8 @@ export default function CampaignsPage() {
   const fetchCampaigns = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-
       const influencerId = user.id;
+      if (!influencerId) return;
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${influencerId}`
@@ -110,11 +110,11 @@ export default function CampaignsPage() {
                   </h2>
 
                   <p className="text-gray-500 mt-2">
-                    Brand ID: {campaign.brand_id}
+                    Brand: {campaign.brand_name || campaign.brand_email || campaign.brand_id}
                   </p>
 
                   <p className="text-gray-500">
-                    Status: {campaign.status}
+                    Budget: {campaign.budget ? `₹${Number(campaign.budget).toLocaleString("en-IN")}` : "N/A"}
                   </p>
                 </div>
 

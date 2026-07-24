@@ -122,8 +122,10 @@ setRecommended(
       localStorage.getItem("user") || "{}"
     );
 
+    if (!user?.id) return;
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${user.id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/brand/${user.id}`
     );
 
     const data =

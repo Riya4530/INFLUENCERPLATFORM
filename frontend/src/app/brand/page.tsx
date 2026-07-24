@@ -36,7 +36,7 @@ const [connectedInfluencers, setConnectedInfluencers] = useState(0);
   try {
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${brandId}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/brand/${brandId}`
     );
 
     const data =

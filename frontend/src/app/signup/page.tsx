@@ -38,23 +38,19 @@ export default function SignupPage() {
         return;
       }
 
-      // 🧠 STORE USER INFO
+      // ✅ Store flat user object — SAME shape as login (user.id, user.email, user.role)
       localStorage.setItem(
         "user",
         JSON.stringify({
+          ...data.user,
           role: role,
-          user: data.user,
         })
       );
 
-      alert("Signup successful!");
+      alert("Signup successful! Please log in.");
 
-      // 🚀 ROLE BASED REDIRECT
-      if (role === "brand") {
-        router.push("/brand");
-      } else {
-        router.push("/login");
-      }
+      // ✅ Always redirect to login after signup for clean session start
+      router.push("/login");
 
     } catch (error) {
       console.log(error);

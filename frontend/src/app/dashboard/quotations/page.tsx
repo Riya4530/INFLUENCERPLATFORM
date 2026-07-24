@@ -17,22 +17,12 @@ const fetchRequests = async () => {
   try {
     const userStr = localStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : null;
-
-    console.log("USER FROM STORAGE:", user);
-
-    if (!user?.id) {
-      console.log("NO USER ID FOUND");
-      return;
-    }
+    if (!user?.id) return;
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${user.id}`
     );
-
     const data = await response.json();
-
-    console.log("API RESPONSE:", data);
-
     setRequests(data.invitations || []);
   } catch (error) {
     console.log(error);
@@ -91,15 +81,9 @@ const fetchRequests = async () => {
       <div className="space-y-4">
 
         {requests.length === 0 && (
-
-          <div className="bg-white p-6 rounded-2xl">
-
-            <p>
-              No accepted campaigns available.
-            </p>
-
+          <div className="bg-white p-6 rounded-2xl text-gray-500">
+            No campaigns assigned to you yet. Check your Bookings page first.
           </div>
-
         )}
 
         {requests.map((request) => (

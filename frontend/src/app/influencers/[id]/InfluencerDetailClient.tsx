@@ -28,7 +28,7 @@ export default function InfluencerDetailClient({ influencer }: { influencer: any
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${user.id}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/brand/${user.id}`);
       const data = await res.json();
       setCampaigns(data.campaigns || []);
       setShowInviteModal(true);

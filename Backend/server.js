@@ -199,6 +199,13 @@ app.post("/api/signup", async (req, res) => {
 
     console.log(error);
 
+    if (error.code === "23505") {
+      return res.status(400).json({
+        success: false,
+        message: "An account with this email already exists. Please login instead.",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Something went wrong",
@@ -1445,6 +1452,30 @@ GROUP BY campaigns.id;
 
   }
 );
+
+/* =========================
+   GET BRAND CAMPAIGNS (by brandId)
+========================= */
+app.get("/api/campaigns/brand/:brandId", async (req, res) => {
+  try {
+    const { brandId } = req.params;
+
+    // Guard: reject obviously invalid IDs
+    if (!brandId || brandId === "undefined" || brandId === "null") {
+      return res.json({ success: true, campaigns: [] });
+    }
+
+    const result = await pool.query(
+      `SELECT * FROM campaigns WHERE brand_id::text = $1 ORDER BY created_at DESC`,
+      [brandId]
+    );
+    res.json({ success: true, campaigns: result.rows });
+  } catch (error) {
+    console.log("Brand campaigns fetch error:", error);
+    res.status(500).json({ success: false, campaigns: [] });
+  }
+});
+
 app.put("/api/campaigns/:id/complete", async (req, res) => {
   try {
     const { id } = req.params;
@@ -1793,7 +1824,43 @@ function buildInvoicePDF(doc, data) {
     );
 }
 
-// ── STREAMING ENDPOINT (for View PDF button) ───────────────
+// ── SPECIFIC ROUTES FIRST (before wildcard :id) ────────────
+
+app.get("/api/invoices/influencer/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    if (!email || email === "undefined") {
+      return res.json({ success: true, invoices: [] });
+    }
+    const result = await pool.query(
+      `SELECT * FROM invoices WHERE influencer_email = $1 ORDER BY created_at DESC`,
+      [email]
+    );
+    res.json({ success: true, invoices: result.rows });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: true, invoices: [] });
+  }
+});
+
+app.get("/api/invoices/brand/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    if (!email || email === "undefined") {
+      return res.json({ success: true, invoices: [] });
+    }
+    const result = await pool.query(
+      `SELECT * FROM invoices WHERE brand_email = $1 ORDER BY created_at DESC`,
+      [email]
+    );
+    res.json({ success: true, invoices: result.rows });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: true, invoices: [] });
+  }
+});
+
+// ── STREAMING ENDPOINT (wildcard - must be LAST) ────────────
 app.get("/api/invoices/:id/pdf", async (req, res) => {
   try {
     const { id } = req.params;
@@ -1834,30 +1901,6 @@ app.get("/api/invoices/:id/pdf", async (req, res) => {
   }
 });
 
-app.get("/api/invoices/influencer/:email", async (req, res) => {
-  const { email } = req.params;
-
-  const result = await pool.query(
-    `SELECT * FROM invoices
-     WHERE influencer_email = $1
-     ORDER BY created_at DESC`,
-    [email]
-  );
-
-  res.json({ success: true, invoices: result.rows });
-});
-app.get("/api/invoices/brand/:email", async (req, res) => {
-  const { email } = req.params;
-
-  const result = await pool.query(
-    `SELECT * FROM invoices
-     WHERE brand_email = $1
-     ORDER BY created_at DESC`,
-    [email]
-  );
-
-  res.json({ success: true, invoices: result.rows });
-});
 app.get("/api/brand-invoices/:brandId", async (req, res) => {
   try {
     const { brandId } = req.params;
@@ -2157,47 +2200,8 @@ app.put(
 //   }
 // });
 /* =========================
-   GET BRAND CAMPAIGNS
+   GET BRAND CAMPAIGNS (legacy - kept for compatibility)
 ========================= */
-
-app.get(
-  "/api/campaigns/:brandId",
-  async (req, res) => {
-
-    try {
-
-      const { brandId } =
-        req.params;
-
-      const result =
-        await pool.query(
-          `
-          SELECT *
-          FROM campaigns
-          WHERE brand_id = $1
-          ORDER BY id DESC
-          `,
-          [brandId]
-        );
-
-      res.json({
-        success: true,
-        campaigns:
-          result.rows
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        success: false
-      });
-
-    }
-
-  }
-);
 
 app.get("/api/search-data", async (req, res) => {
 
