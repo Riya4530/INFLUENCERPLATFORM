@@ -87,22 +87,27 @@ export default function AnalyticsPage() {
     );
 
 
-  const accepted =
-    requests.filter(
-      r=>r.status==="Accepted"
-    ).length;
+  const accepted = requests.filter(
+    (r) =>
+      r.deal_status?.toLowerCase() === "accepted" ||
+      r.status?.toLowerCase() === "accepted" ||
+      r.status?.toLowerCase() === "completed"
+  ).length;
 
+  const pending = requests.filter(
+    (r) =>
+      r.deal_status?.toLowerCase() === "pending" ||
+      r.deal_status?.toLowerCase() === "negotiation" ||
+      r.status?.toLowerCase() === "pending" ||
+      r.status?.toLowerCase() === "quoted" ||
+      (!r.deal_status && (!r.status || r.status?.toLowerCase() === "pending"))
+  ).length;
 
-  const pending =
-    requests.filter(
-      r=>r.status==="Pending"
-    ).length;
-
-
-  const rejected =
-    requests.filter(
-      r=>r.status==="Rejected"
-    ).length;
+  const rejected = requests.filter(
+    (r) =>
+      r.deal_status?.toLowerCase() === "rejected" ||
+      r.status?.toLowerCase() === "rejected"
+  ).length;
 
 
 
@@ -355,43 +360,19 @@ Top Collaborators ⭐
 
 
 
-{
-collaborations.map(
-item=>(
-
-
-<div
-key={item.id}
-className="flex justify-between border-b py-5"
->
-
-
-<div>
-
-<h3 className="font-bold text-xl">
-{item.influencer_name}
-</h3>
-
-<p className="text-gray-500">
-Successful collaboration
-</p>
-
-</div>
-
-
-
-<p className="font-bold text-green-600">
-₹{item.quotation_amount}
-</p>
-
-
-
-</div>
-
-
-)
-)
-}
+        {collaborations.length === 0 ? (
+          <p className="text-gray-500 py-4">No active or completed collaborations yet.</p>
+        ) : (
+          collaborations.map((item) => (
+            <div key={item.id} className="flex justify-between border-b py-5">
+              <div>
+                <h3 className="font-bold text-xl">{item.influencer_name}</h3>
+                <p className="text-gray-500">Successful collaboration</p>
+              </div>
+              <p className="font-bold text-green-600">₹{item.quotation_amount}</p>
+            </div>
+          ))
+        )}
 
 
 

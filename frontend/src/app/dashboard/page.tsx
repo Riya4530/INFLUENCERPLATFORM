@@ -80,11 +80,15 @@ const fetchDashboardStats = async (userId: string) => {
 
     setBrandRequests(requests.length);
 
-    const accepted = requests.filter(
-      (r: any) => r.status === "Accepted"
+    const active = requests.filter(
+      (r: any) =>
+        (r.deal_status?.toLowerCase() === "accepted" ||
+          r.status?.toLowerCase() === "accepted" ||
+          r.status?.toLowerCase() === "active") &&
+        r.status?.toLowerCase() !== "completed"
     );
 
-    setActiveCampaigns(accepted.length);
+    setActiveCampaigns(active.length);
 
   } catch (error) {
     console.log(error);

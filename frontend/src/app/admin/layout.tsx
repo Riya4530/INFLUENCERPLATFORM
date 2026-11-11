@@ -34,8 +34,8 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-100">
 
-      {/* TOP HEADER */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      {/* MOBILE-ONLY TOP HEADER */}
+      <header className="bg-white border-b md:hidden sticky top-16 z-40">
 
         <div className="px-4 md:px-6 py-4 flex items-center justify-between">
 
@@ -93,13 +93,16 @@ export default function AdminLayout({
         {/* SIDEBAR */}
         <aside
           className={`
-            fixed md:static
-            top-0 left-0
-            h-screen
+            fixed md:sticky
+            top-0 md:top-[73px]
+            left-0
+            h-screen md:h-[calc(100vh-73px)]
             w-72
             bg-slate-950
             text-white
-            z-50
+            z-40 md:z-30
+            shrink-0
+            overflow-y-auto
             transform
             transition-transform
             duration-300

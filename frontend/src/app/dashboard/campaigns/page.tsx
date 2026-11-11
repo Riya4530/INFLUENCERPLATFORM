@@ -21,7 +21,10 @@ export default function CampaignsPage() {
       const data = await response.json();
 
       const activeCampaigns = (data.invitations || []).filter(
-        (item: any) => item.deal_status === "Accepted"
+        (item: any) =>
+          item.deal_status?.toLowerCase() === "accepted" ||
+          item.status?.toLowerCase() === "accepted" ||
+          item.status?.toLowerCase() === "completed"
       );
 
       setCampaigns(activeCampaigns);

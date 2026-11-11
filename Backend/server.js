@@ -62,7 +62,11 @@ function removeSseClient(id) {
 
 async function broadcastInfluencers() {
   try {
-    const profiles = await pool.query(`SELECT * FROM influencer_profiles ORDER BY id DESC`);
+    const profiles = await pool.query(`
+      SELECT * FROM influencer_profiles 
+      WHERE LOWER(COALESCE(verification_status, 'pending')) IN ('verified', 'approved') 
+      ORDER BY id DESC
+    `);
     const payload = JSON.stringify({ type: 'update', influencers: profiles.rows });
     for (const send of sseClients.values()) {
       try {
@@ -460,11 +464,17 @@ app.get("/api/influencers", async (req, res) => {
         LEFT JOIN users
           ON users.email::text = influencer_profiles.user_email::text
           OR users.id::text = influencer_profiles.user_id::text
+        WHERE LOWER(COALESCE(influencer_profiles.verification_status, 'pending')) IN ('verified', 'approved')
         ORDER BY influencer_profiles.id DESC
       `);
     } catch (e) {
       console.log("JOIN fetch error, using fallback query:", e.message);
-      profiles = await pool.query(`SELECT *, id::text AS user_id FROM influencer_profiles ORDER BY id DESC`);
+      profiles = await pool.query(`
+        SELECT *, id::text AS user_id 
+        FROM influencer_profiles 
+        WHERE LOWER(COALESCE(verification_status, 'pending')) IN ('verified', 'approved')
+        ORDER BY id DESC
+      `);
     }
 
     res.json({
@@ -505,7 +515,11 @@ app.get('/api/influencers/stream', async (req, res) => {
 
   // send initial payload
   try {
-    const profiles = await pool.query(`SELECT * FROM influencer_profiles ORDER BY id DESC`);
+    const profiles = await pool.query(`
+      SELECT * FROM influencer_profiles 
+      WHERE LOWER(COALESCE(verification_status, 'pending')) IN ('verified', 'approved')
+      ORDER BY id DESC
+    `);
     send(JSON.stringify({ type: 'initial', influencers: profiles.rows }));
   } catch (e) {
     send(JSON.stringify({ type: 'error', message: 'Could not fetch influencers' }));
@@ -637,6 +651,7 @@ app.get(
         FROM influencer_profiles
         WHERE LOWER(city) = LOWER($1)
         AND LOWER(category) = LOWER($2)
+        AND LOWER(COALESCE(verification_status, 'pending')) IN ('verified', 'approved')
         `,
         [city, category]
       );
@@ -676,6 +691,7 @@ app.get(
         SELECT *
         FROM influencer_profiles
         WHERE LOWER(city) = LOWER($1)
+        AND LOWER(COALESCE(verification_status, 'pending')) IN ('verified', 'approved')
         ORDER BY followers_count DESC
         `,
         [city]
